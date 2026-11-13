@@ -1,0 +1,1435 @@
+{
+  "metadata": {
+    "execution_timestamp": "2026-09-09T20:21:39.080258+00:00",
+    "total_samples": 59850,
+    "unique_cells": 171,
+    "feature_columns": [
+      "fishing_hours_recent",
+      "fishing_hours_lag_1",
+      "fishing_hours_lag_2",
+      "fishing_hours_lag_3",
+      "fishing_hours_7d_mean",
+      "fishing_hours_7d_max",
+      "fishing_hours_7d_std",
+      "fishing_hours_7d_pos_freq",
+      "fishing_hours_14d_mean",
+      "regional_fishing_hours_T",
+      "wave_height",
+      "wave_period",
+      "wave_direction_sin",
+      "wave_direction_cos",
+      "swell_wave_height",
+      "ocean_current_velocity",
+      "wind_speed",
+      "wave_height_isna",
+      "ocean_current_isna",
+      "wind_speed_isna",
+      "latitude",
+      "longitude",
+      "distance_to_coast_km",
+      "is_coastal",
+      "day_of_year",
+      "month",
+      "day_of_week",
+      "sin_day_of_year",
+      "cos_day_of_year"
+    ],
+    "train_dates": [
+      "2023-01-15",
+      "2023-08-12"
+    ],
+    "val_dates": [
+      "2023-08-13",
+      "2023-10-21"
+    ],
+    "test_dates": [
+      "2023-10-22",
+      "2023-12-30"
+    ]
+  },
+  "threshold_evaluations": {
+    "thresh_0.5h": {
+      "threshold_hours": 0.5,
+      "sample_counts": {
+        "train_pos": 1479,
+        "train_total": 35910,
+        "train_prevalence": 0.041186299081035924,
+        "val_pos": 292,
+        "val_total": 11970,
+        "val_prevalence": 0.024394319131161236,
+        "test_pos": 504,
+        "test_total": 11970,
+        "test_prevalence": 0.042105263157894736
+      },
+      "baselines": {
+        "Recent_Activity": {
+          "val": {
+            "pr_auc": 0.20048391553777167,
+            "roc_auc": 0.6861777033034837,
+            "precision": 0.37282229965156793,
+            "recall": 0.3664383561643836,
+            "f1": 0.3696027633851468,
+            "confusion_matrix": [
+              [
+                11498,
+                180
+              ],
+              [
+                185,
+                107
+              ]
+            ],
+            "pos_count": 292,
+            "neg_count": 11678,
+            "prevalence": 0.024394319131161236,
+            "pred_pos_count": 287,
+            "mae": 0.38170377332219435,
+            "rmse": 3.6272894506503066,
+            "r2": -0.4266288548248618
+          },
+          "test": {
+            "pr_auc": 0.3795620230538411,
+            "roc_auc": 0.7471291070355696,
+            "precision": 0.48455598455598453,
+            "recall": 0.498015873015873,
+            "f1": 0.4911937377690802,
+            "confusion_matrix": [
+              [
+                11199,
+                267
+              ],
+              [
+                253,
+                251
+              ]
+            ],
+            "pos_count": 504,
+            "neg_count": 11466,
+            "prevalence": 0.042105263157894736,
+            "pred_pos_count": 518,
+            "mae": 0.6907976886661097,
+            "rmse": 4.562556892436768,
+            "r2": 0.2986562861731201
+          }
+        },
+        "Trailing_7Day": {
+          "val": {
+            "pr_auc": 0.15456893752879602,
+            "roc_auc": 0.7863448305794526,
+            "precision": 0.19480519480519481,
+            "recall": 0.4623287671232877,
+            "f1": 0.27411167512690354,
+            "confusion_matrix": [
+              [
+                11120,
+                558
+              ],
+              [
+                157,
+                135
+              ]
+            ],
+            "pos_count": 292,
+            "neg_count": 11678,
+            "prevalence": 0.024394319131161236,
+            "pred_pos_count": 693,
+            "mae": 0.4239296488575937,
+            "rmse": 3.120422735043699,
+            "r2": -0.05578003474123272
+          },
+          "test": {
+            "pr_auc": 0.3649212061804614,
+            "roc_auc": 0.8654402491562354,
+            "precision": 0.2773892773892774,
+            "recall": 0.7083333333333334,
+            "f1": 0.39865996649916247,
+            "confusion_matrix": [
+              [
+                10536,
+                930
+              ],
+              [
+                147,
+                357
+              ]
+            ],
+            "pos_count": 504,
+            "neg_count": 11466,
+            "prevalence": 0.042105263157894736,
+            "pred_pos_count": 1287,
+            "mae": 0.8717978544244208,
+            "rmse": 5.096511032857405,
+            "r2": 0.12489480833130684
+          }
+        },
+        "Seasonal_Spatial": {
+          "val": {
+            "pr_auc": 0.08095594974424543,
+            "roc_auc": 0.8241987626892389,
+            "precision": 0.07959183673469387,
+            "recall": 0.2671232876712329,
+            "f1": 0.12264150943396226,
+            "confusion_matrix": [
+              [
+                10776,
+                902
+              ],
+              [
+                214,
+                78
+              ]
+            ],
+            "pos_count": 292,
+            "neg_count": 11678,
+            "prevalence": 0.024394319131161236,
+            "pred_pos_count": 980
+          },
+          "test": {
+            "pr_auc": 0.1461270632233471,
+            "roc_auc": 0.8476885768552436,
+            "precision": 0.17346938775510204,
+            "recall": 0.3373015873015873,
+            "f1": 0.22911051212938005,
+            "confusion_matrix": [
+              [
+                10656,
+                810
+              ],
+              [
+                334,
+                170
+              ]
+            ],
+            "pos_count": 504,
+            "neg_count": 11466,
+            "prevalence": 0.042105263157894736,
+            "pred_pos_count": 980
+          }
+        }
+      },
+      "ml_models": {
+        "Logistic_Regression": {
+          "tuned_threshold": 0.8400000000000001,
+          "val": {
+            "pr_auc": 0.25333497495786944,
+            "roc_auc": 0.8998649843869869,
+            "precision": 0.31805157593123207,
+            "recall": 0.3801369863013699,
+            "f1": 0.3463338533541342,
+            "confusion_matrix": [
+              [
+                11440,
+                238
+              ],
+              [
+                181,
+                111
+              ]
+            ],
+            "pos_count": 292,
+            "neg_count": 11678,
+            "prevalence": 0.024394319131161236,
+            "pred_pos_count": 349
+          },
+          "test": {
+            "pr_auc": 0.39248166959864045,
+            "roc_auc": 0.866429457415852,
+            "precision": 0.09586631486367635,
+            "recall": 0.8650793650793651,
+            "f1": 0.1726049089469517,
+            "confusion_matrix": [
+              [
+                7354,
+                4112
+              ],
+              [
+                68,
+                436
+              ]
+            ],
+            "pos_count": 504,
+            "neg_count": 11466,
+            "prevalence": 0.042105263157894736,
+            "pred_pos_count": 4548
+          }
+        },
+        "Random_Forest": {
+          "tuned_threshold": 0.6900000000000001,
+          "val": {
+            "pr_auc": 0.21234227061186772,
+            "roc_auc": 0.8921152230983443,
+            "precision": 0.3087248322147651,
+            "recall": 0.3150684931506849,
+            "f1": 0.31186440677966104,
+            "confusion_matrix": [
+              [
+                11472,
+                206
+              ],
+              [
+                200,
+                92
+              ]
+            ],
+            "pos_count": 292,
+            "neg_count": 11678,
+            "prevalence": 0.024394319131161236,
+            "pred_pos_count": 298
+          },
+          "test": {
+            "pr_auc": 0.3204735819383399,
+            "roc_auc": 0.9267810247827255,
+            "precision": 0.36335403726708076,
+            "recall": 0.4642857142857143,
+            "f1": 0.4076655052264808,
+            "confusion_matrix": [
+              [
+                11056,
+                410
+              ],
+              [
+                270,
+                234
+              ]
+            ],
+            "pos_count": 504,
+            "neg_count": 11466,
+            "prevalence": 0.042105263157894736,
+            "pred_pos_count": 644
+          }
+        },
+        "XGBoost": {
+          "tuned_threshold": 0.88,
+          "val": {
+            "pr_auc": 0.2724234500635123,
+            "roc_auc": 0.9049513838220562,
+            "precision": 0.41363636363636364,
+            "recall": 0.3116438356164384,
+            "f1": 0.35546875,
+            "confusion_matrix": [
+              [
+                11549,
+                129
+              ],
+              [
+                201,
+                91
+              ]
+            ],
+            "pos_count": 292,
+            "neg_count": 11678,
+            "prevalence": 0.024394319131161236,
+            "pred_pos_count": 220
+          },
+          "test": {
+            "pr_auc": 0.501080917763892,
+            "roc_auc": 0.9363998702859246,
+            "precision": 0.47920433996383366,
+            "recall": 0.5257936507936508,
+            "f1": 0.5014191106906338,
+            "confusion_matrix": [
+              [
+                11178,
+                288
+              ],
+              [
+                239,
+                265
+              ]
+            ],
+            "pos_count": 504,
+            "neg_count": 11466,
+            "prevalence": 0.042105263157894736,
+            "pred_pos_count": 553
+          }
+        }
+      }
+    },
+    "thresh_1.0h": {
+      "threshold_hours": 1.0,
+      "sample_counts": {
+        "train_pos": 1392,
+        "train_total": 35910,
+        "train_prevalence": 0.03876357560568087,
+        "val_pos": 248,
+        "val_total": 11970,
+        "val_prevalence": 0.020718462823725983,
+        "test_pos": 474,
+        "test_total": 11970,
+        "test_prevalence": 0.039598997493734335
+      },
+      "baselines": {
+        "Recent_Activity": {
+          "val": {
+            "pr_auc": 0.19301067910932979,
+            "roc_auc": 0.6959317261174192,
+            "precision": 0.35390946502057613,
+            "recall": 0.3467741935483871,
+            "f1": 0.35030549898167007,
+            "confusion_matrix": [
+              [
+                11565,
+                157
+              ],
+              [
+                162,
+                86
+              ]
+            ],
+            "pos_count": 248,
+            "neg_count": 11722,
+            "prevalence": 0.020718462823725983,
+            "pred_pos_count": 243,
+            "mae": 0.38170377332219435,
+            "rmse": 3.6272894506503066,
+            "r2": -0.4266288548248618
+          },
+          "test": {
+            "pr_auc": 0.3790477797398105,
+            "roc_auc": 0.7515474103632451,
+            "precision": 0.47540983606557374,
+            "recall": 0.48945147679324896,
+            "f1": 0.48232848232848236,
+            "confusion_matrix": [
+              [
+                11240,
+                256
+              ],
+              [
+                242,
+                232
+              ]
+            ],
+            "pos_count": 474,
+            "neg_count": 11496,
+            "prevalence": 0.039598997493734335,
+            "pred_pos_count": 488,
+            "mae": 0.6907976886661097,
+            "rmse": 4.562556892436768,
+            "r2": 0.2986562861731201
+          }
+        },
+        "Trailing_7Day": {
+          "val": {
+            "pr_auc": 0.14296486425140342,
+            "roc_auc": 0.8008256462895796,
+            "precision": 0.1912280701754386,
+            "recall": 0.43951612903225806,
+            "f1": 0.2665036674816626,
+            "confusion_matrix": [
+              [
+                11261,
+                461
+              ],
+              [
+                139,
+                109
+              ]
+            ],
+            "pos_count": 248,
+            "neg_count": 11722,
+            "prevalence": 0.020718462823725983,
+            "pred_pos_count": 570,
+            "mae": 0.4239296488575937,
+            "rmse": 3.120422735043699,
+            "r2": -0.05578003474123272
+          },
+          "test": {
+            "pr_auc": 0.3632242339484513,
+            "roc_auc": 0.8717818562464581,
+            "precision": 0.28844404003639673,
+            "recall": 0.6687763713080169,
+            "f1": 0.4030514939605849,
+            "confusion_matrix": [
+              [
+                10714,
+                782
+              ],
+              [
+                157,
+                317
+              ]
+            ],
+            "pos_count": 474,
+            "neg_count": 11496,
+            "prevalence": 0.039598997493734335,
+            "pred_pos_count": 1099,
+            "mae": 0.8717978544244208,
+            "rmse": 5.096511032857405,
+            "r2": 0.12489480833130684
+          }
+        },
+        "Seasonal_Spatial": {
+          "val": {
+            "pr_auc": 0.06980500352922481,
+            "roc_auc": 0.8185817541870538,
+            "precision": 0.06428571428571428,
+            "recall": 0.21774193548387097,
+            "f1": 0.09926470588235294,
+            "confusion_matrix": [
+              [
+                10936,
+                786
+              ],
+              [
+                194,
+                54
+              ]
+            ],
+            "pos_count": 248,
+            "neg_count": 11722,
+            "prevalence": 0.020718462823725983,
+            "pred_pos_count": 840
+          },
+          "test": {
+            "pr_auc": 0.14014666322608318,
+            "roc_auc": 0.8446172067921627,
+            "precision": 0.17261904761904762,
+            "recall": 0.3059071729957806,
+            "f1": 0.2207001522070015,
+            "confusion_matrix": [
+              [
+                10801,
+                695
+              ],
+              [
+                329,
+                145
+              ]
+            ],
+            "pos_count": 474,
+            "neg_count": 11496,
+            "prevalence": 0.039598997493734335,
+            "pred_pos_count": 840
+          }
+        }
+      },
+      "ml_models": {
+        "Logistic_Regression": {
+          "tuned_threshold": 0.9,
+          "val": {
+            "pr_auc": 0.23272051635707058,
+            "roc_auc": 0.9043317362995416,
+            "precision": 0.284375,
+            "recall": 0.36693548387096775,
+            "f1": 0.3204225352112676,
+            "confusion_matrix": [
+              [
+                11493,
+                229
+              ],
+              [
+                157,
+                91
+              ]
+            ],
+            "pos_count": 248,
+            "neg_count": 11722,
+            "prevalence": 0.020718462823725983,
+            "pred_pos_count": 320
+          },
+          "test": {
+            "pr_auc": 0.366418304725028,
+            "roc_auc": 0.8556527825492044,
+            "precision": 0.08006814310051108,
+            "recall": 0.8924050632911392,
+            "f1": 0.14695153725898905,
+            "confusion_matrix": [
+              [
+                6636,
+                4860
+              ],
+              [
+                51,
+                423
+              ]
+            ],
+            "pos_count": 474,
+            "neg_count": 11496,
+            "prevalence": 0.039598997493734335,
+            "pred_pos_count": 5283
+          }
+        },
+        "Random_Forest": {
+          "tuned_threshold": 0.62,
+          "val": {
+            "pr_auc": 0.1914555258798921,
+            "roc_auc": 0.8897914247265962,
+            "precision": 0.2043222003929273,
+            "recall": 0.41935483870967744,
+            "f1": 0.2747688243064729,
+            "confusion_matrix": [
+              [
+                11317,
+                405
+              ],
+              [
+                144,
+                104
+              ]
+            ],
+            "pos_count": 248,
+            "neg_count": 11722,
+            "prevalence": 0.020718462823725983,
+            "pred_pos_count": 509
+          },
+          "test": {
+            "pr_auc": 0.3235990048427545,
+            "roc_auc": 0.9257736684783406,
+            "precision": 0.30991735537190085,
+            "recall": 0.6329113924050633,
+            "f1": 0.4160887656033287,
+            "confusion_matrix": [
+              [
+                10828,
+                668
+              ],
+              [
+                174,
+                300
+              ]
+            ],
+            "pos_count": 474,
+            "neg_count": 11496,
+            "prevalence": 0.039598997493734335,
+            "pred_pos_count": 968
+          }
+        },
+        "XGBoost": {
+          "tuned_threshold": 0.88,
+          "val": {
+            "pr_auc": 0.24852834835392137,
+            "roc_auc": 0.9068609273436767,
+            "precision": 0.39267015706806285,
+            "recall": 0.3024193548387097,
+            "f1": 0.3416856492027335,
+            "confusion_matrix": [
+              [
+                11606,
+                116
+              ],
+              [
+                173,
+                75
+              ]
+            ],
+            "pos_count": 248,
+            "neg_count": 11722,
+            "prevalence": 0.020718462823725983,
+            "pred_pos_count": 191
+          },
+          "test": {
+            "pr_auc": 0.4897564017041189,
+            "roc_auc": 0.9387010231406852,
+            "precision": 0.4839357429718876,
+            "recall": 0.5084388185654009,
+            "f1": 0.49588477366255146,
+            "confusion_matrix": [
+              [
+                11239,
+                257
+              ],
+              [
+                233,
+                241
+              ]
+            ],
+            "pos_count": 474,
+            "neg_count": 11496,
+            "prevalence": 0.039598997493734335,
+            "pred_pos_count": 498
+          }
+        }
+      }
+    },
+    "thresh_2.0h": {
+      "threshold_hours": 2.0,
+      "sample_counts": {
+        "train_pos": 1251,
+        "train_total": 35910,
+        "train_prevalence": 0.034837092731829576,
+        "val_pos": 193,
+        "val_total": 11970,
+        "val_prevalence": 0.01612364243943191,
+        "test_pos": 407,
+        "test_total": 11970,
+        "test_prevalence": 0.03400167084377611
+      },
+      "baselines": {
+        "Recent_Activity": {
+          "val": {
+            "pr_auc": 0.18421513195821815,
+            "roc_auc": 0.7044245369806169,
+            "precision": 0.34574468085106386,
+            "recall": 0.33678756476683935,
+            "f1": 0.34120734908136485,
+            "confusion_matrix": [
+              [
+                11654,
+                123
+              ],
+              [
+                128,
+                65
+              ]
+            ],
+            "pos_count": 193,
+            "neg_count": 11777,
+            "prevalence": 0.01612364243943191,
+            "pred_pos_count": 188,
+            "mae": 0.38170377332219435,
+            "rmse": 3.6272894506503066,
+            "r2": -0.4266288548248618
+          },
+          "test": {
+            "pr_auc": 0.37685440449935126,
+            "roc_auc": 0.7671585912959259,
+            "precision": 0.4797136038186158,
+            "recall": 0.49385749385749383,
+            "f1": 0.48668280871670705,
+            "confusion_matrix": [
+              [
+                11345,
+                218
+              ],
+              [
+                206,
+                201
+              ]
+            ],
+            "pos_count": 407,
+            "neg_count": 11563,
+            "prevalence": 0.03400167084377611,
+            "pred_pos_count": 419,
+            "mae": 0.6907976886661097,
+            "rmse": 4.562556892436768,
+            "r2": 0.2986562861731201
+          }
+        },
+        "Trailing_7Day": {
+          "val": {
+            "pr_auc": 0.12494038194015716,
+            "roc_auc": 0.8164537358978002,
+            "precision": 0.18041237113402062,
+            "recall": 0.3626943005181347,
+            "f1": 0.24096385542168675,
+            "confusion_matrix": [
+              [
+                11459,
+                318
+              ],
+              [
+                123,
+                70
+              ]
+            ],
+            "pos_count": 193,
+            "neg_count": 11777,
+            "prevalence": 0.01612364243943191,
+            "pred_pos_count": 388,
+            "mae": 0.4239296488575937,
+            "rmse": 3.120422735043699,
+            "r2": -0.05578003474123272
+          },
+          "test": {
+            "pr_auc": 0.341916504421122,
+            "roc_auc": 0.8807242494434399,
+            "precision": 0.27408256880733944,
+            "recall": 0.5872235872235873,
+            "f1": 0.3737294761532447,
+            "confusion_matrix": [
+              [
+                10930,
+                633
+              ],
+              [
+                168,
+                239
+              ]
+            ],
+            "pos_count": 407,
+            "neg_count": 11563,
+            "prevalence": 0.03400167084377611,
+            "pred_pos_count": 872,
+            "mae": 0.8717978544244208,
+            "rmse": 5.096511032857405,
+            "r2": 0.12489480833130684
+          }
+        },
+        "Seasonal_Spatial": {
+          "val": {
+            "pr_auc": 0.05670676621807138,
+            "roc_auc": 0.8145742491842138,
+            "precision": 0.05238095238095238,
+            "recall": 0.22797927461139897,
+            "f1": 0.08518877057115198,
+            "confusion_matrix": [
+              [
+                10981,
+                796
+              ],
+              [
+                149,
+                44
+              ]
+            ],
+            "pos_count": 193,
+            "neg_count": 11777,
+            "prevalence": 0.01612364243943191,
+            "pred_pos_count": 840
+          },
+          "test": {
+            "pr_auc": 0.12895793024569524,
+            "roc_auc": 0.8494912285883487,
+            "precision": 0.15714285714285714,
+            "recall": 0.32432432432432434,
+            "f1": 0.21170809943865276,
+            "confusion_matrix": [
+              [
+                10855,
+                708
+              ],
+              [
+                275,
+                132
+              ]
+            ],
+            "pos_count": 407,
+            "neg_count": 11563,
+            "prevalence": 0.03400167084377611,
+            "pred_pos_count": 840
+          }
+        }
+      },
+      "ml_models": {
+        "Logistic_Regression": {
+          "tuned_threshold": 0.89,
+          "val": {
+            "pr_auc": 0.21935885411976588,
+            "roc_auc": 0.9122294663216836,
+            "precision": 0.30275229357798167,
+            "recall": 0.34196891191709844,
+            "f1": 0.32116788321167883,
+            "confusion_matrix": [
+              [
+                11625,
+                152
+              ],
+              [
+                127,
+                66
+              ]
+            ],
+            "pos_count": 193,
+            "neg_count": 11777,
+            "prevalence": 0.01612364243943191,
+            "pred_pos_count": 218
+          },
+          "test": {
+            "pr_auc": 0.38613261841196433,
+            "roc_auc": 0.885420560072467,
+            "precision": 0.10559006211180125,
+            "recall": 0.7936117936117936,
+            "f1": 0.18638199653779572,
+            "confusion_matrix": [
+              [
+                8827,
+                2736
+              ],
+              [
+                84,
+                323
+              ]
+            ],
+            "pos_count": 407,
+            "neg_count": 11563,
+            "prevalence": 0.03400167084377611,
+            "pred_pos_count": 3059
+          }
+        },
+        "Random_Forest": {
+          "tuned_threshold": 0.6900000000000001,
+          "val": {
+            "pr_auc": 0.17830082706375647,
+            "roc_auc": 0.8931422492510871,
+            "precision": 0.32142857142857145,
+            "recall": 0.23316062176165803,
+            "f1": 0.2702702702702703,
+            "confusion_matrix": [
+              [
+                11682,
+                95
+              ],
+              [
+                148,
+                45
+              ]
+            ],
+            "pos_count": 193,
+            "neg_count": 11777,
+            "prevalence": 0.01612364243943191,
+            "pred_pos_count": 140
+          },
+          "test": {
+            "pr_auc": 0.3526087907246241,
+            "roc_auc": 0.933463956987264,
+            "precision": 0.430952380952381,
+            "recall": 0.44471744471744473,
+            "f1": 0.437726723095526,
+            "confusion_matrix": [
+              [
+                11324,
+                239
+              ],
+              [
+                226,
+                181
+              ]
+            ],
+            "pos_count": 407,
+            "neg_count": 11563,
+            "prevalence": 0.03400167084377611,
+            "pred_pos_count": 420
+          }
+        },
+        "XGBoost": {
+          "tuned_threshold": 0.9,
+          "val": {
+            "pr_auc": 0.23402922205444104,
+            "roc_auc": 0.9170823872472955,
+            "precision": 0.3904109589041096,
+            "recall": 0.29533678756476683,
+            "f1": 0.336283185840708,
+            "confusion_matrix": [
+              [
+                11688,
+                89
+              ],
+              [
+                136,
+                57
+              ]
+            ],
+            "pos_count": 193,
+            "neg_count": 11777,
+            "prevalence": 0.01612364243943191,
+            "pred_pos_count": 146
+          },
+          "test": {
+            "pr_auc": 0.4808005168942368,
+            "roc_auc": 0.9452735266537913,
+            "precision": 0.5165394402035624,
+            "recall": 0.4987714987714988,
+            "f1": 0.5075,
+            "confusion_matrix": [
+              [
+                11373,
+                190
+              ],
+              [
+                204,
+                203
+              ]
+            ],
+            "pos_count": 407,
+            "neg_count": 11563,
+            "prevalence": 0.03400167084377611,
+            "pred_pos_count": 393
+          }
+        }
+      }
+    },
+    "thresh_5.0h": {
+      "threshold_hours": 5.0,
+      "sample_counts": {
+        "train_pos": 1009,
+        "train_total": 35910,
+        "train_prevalence": 0.02809802283486494,
+        "val_pos": 140,
+        "val_total": 11970,
+        "val_prevalence": 0.011695906432748537,
+        "test_pos": 299,
+        "test_total": 11970,
+        "test_prevalence": 0.024979114452798663
+      },
+      "baselines": {
+        "Recent_Activity": {
+          "val": {
+            "pr_auc": 0.1844280584393556,
+            "roc_auc": 0.7276186450911726,
+            "precision": 0.34782608695652173,
+            "recall": 0.34285714285714286,
+            "f1": 0.34532374100719426,
+            "confusion_matrix": [
+              [
+                11740,
+                90
+              ],
+              [
+                92,
+                48
+              ]
+            ],
+            "pos_count": 140,
+            "neg_count": 11830,
+            "prevalence": 0.011695906432748537,
+            "pred_pos_count": 138,
+            "mae": 0.38170377332219435,
+            "rmse": 3.6272894506503066,
+            "r2": -0.4266288548248618
+          },
+          "test": {
+            "pr_auc": 0.3470207696655779,
+            "roc_auc": 0.7793832811453596,
+            "precision": 0.46254071661237783,
+            "recall": 0.47491638795986624,
+            "f1": 0.46864686468646866,
+            "confusion_matrix": [
+              [
+                11506,
+                165
+              ],
+              [
+                157,
+                142
+              ]
+            ],
+            "pos_count": 299,
+            "neg_count": 11671,
+            "prevalence": 0.024979114452798663,
+            "pred_pos_count": 307,
+            "mae": 0.6907976886661097,
+            "rmse": 4.562556892436768,
+            "r2": 0.2986562861731201
+          }
+        },
+        "Trailing_7Day": {
+          "val": {
+            "pr_auc": 0.11339329683214742,
+            "roc_auc": 0.846162903031035,
+            "precision": 0.19230769230769232,
+            "recall": 0.21428571428571427,
+            "f1": 0.20270270270270271,
+            "confusion_matrix": [
+              [
+                11704,
+                126
+              ],
+              [
+                110,
+                30
+              ]
+            ],
+            "pos_count": 140,
+            "neg_count": 11830,
+            "prevalence": 0.011695906432748537,
+            "pred_pos_count": 156,
+            "mae": 0.4239296488575937,
+            "rmse": 3.120422735043699,
+            "r2": -0.05578003474123272
+          },
+          "test": {
+            "pr_auc": 0.29527001059552893,
+            "roc_auc": 0.885060704160815,
+            "precision": 0.33240997229916897,
+            "recall": 0.4013377926421405,
+            "f1": 0.36363636363636365,
+            "confusion_matrix": [
+              [
+                11430,
+                241
+              ],
+              [
+                179,
+                120
+              ]
+            ],
+            "pos_count": 299,
+            "neg_count": 11671,
+            "prevalence": 0.024979114452798663,
+            "pred_pos_count": 361,
+            "mae": 0.8717978544244208,
+            "rmse": 5.096511032857405,
+            "r2": 0.12489480833130684
+          }
+        },
+        "Seasonal_Spatial": {
+          "val": {
+            "pr_auc": 0.042989573881559884,
+            "roc_auc": 0.8237320371935757,
+            "precision": 0.055357142857142855,
+            "recall": 0.22142857142857142,
+            "f1": 0.08857142857142856,
+            "confusion_matrix": [
+              [
+                11301,
+                529
+              ],
+              [
+                109,
+                31
+              ]
+            ],
+            "pos_count": 140,
+            "neg_count": 11830,
+            "prevalence": 0.011695906432748537,
+            "pred_pos_count": 560
+          },
+          "test": {
+            "pr_auc": 0.09553505731191739,
+            "roc_auc": 0.8361360190438585,
+            "precision": 0.14464285714285716,
+            "recall": 0.2709030100334448,
+            "f1": 0.18859138533178113,
+            "confusion_matrix": [
+              [
+                11192,
+                479
+              ],
+              [
+                218,
+                81
+              ]
+            ],
+            "pos_count": 299,
+            "neg_count": 11671,
+            "prevalence": 0.024979114452798663,
+            "pred_pos_count": 560
+          }
+        }
+      },
+      "ml_models": {
+        "Logistic_Regression": {
+          "tuned_threshold": 0.8300000000000001,
+          "val": {
+            "pr_auc": 0.20515915964607914,
+            "roc_auc": 0.9215118946987079,
+            "precision": 0.24888888888888888,
+            "recall": 0.4,
+            "f1": 0.30684931506849317,
+            "confusion_matrix": [
+              [
+                11661,
+                169
+              ],
+              [
+                84,
+                56
+              ]
+            ],
+            "pos_count": 140,
+            "neg_count": 11830,
+            "prevalence": 0.011695906432748537,
+            "pred_pos_count": 225
+          },
+          "test": {
+            "pr_auc": 0.3402520579098401,
+            "roc_auc": 0.8901335929979949,
+            "precision": 0.08478341355053684,
+            "recall": 0.7658862876254181,
+            "f1": 0.15266666666666667,
+            "confusion_matrix": [
+              [
+                9199,
+                2472
+              ],
+              [
+                70,
+                229
+              ]
+            ],
+            "pos_count": 299,
+            "neg_count": 11671,
+            "prevalence": 0.024979114452798663,
+            "pred_pos_count": 2701
+          }
+        },
+        "Random_Forest": {
+          "tuned_threshold": 0.66,
+          "val": {
+            "pr_auc": 0.14432060120341447,
+            "roc_auc": 0.9139195145513827,
+            "precision": 0.21428571428571427,
+            "recall": 0.32142857142857145,
+            "f1": 0.2571428571428571,
+            "confusion_matrix": [
+              [
+                11665,
+                165
+              ],
+              [
+                95,
+                45
+              ]
+            ],
+            "pos_count": 140,
+            "neg_count": 11830,
+            "prevalence": 0.011695906432748537,
+            "pred_pos_count": 210
+          },
+          "test": {
+            "pr_auc": 0.26419584375017946,
+            "roc_auc": 0.9299378243360541,
+            "precision": 0.30297397769516726,
+            "recall": 0.5451505016722408,
+            "f1": 0.38948626045400236,
+            "confusion_matrix": [
+              [
+                11296,
+                375
+              ],
+              [
+                136,
+                163
+              ]
+            ],
+            "pos_count": 299,
+            "neg_count": 11671,
+            "prevalence": 0.024979114452798663,
+            "pred_pos_count": 538
+          }
+        },
+        "XGBoost": {
+          "tuned_threshold": 0.88,
+          "val": {
+            "pr_auc": 0.21227087600624622,
+            "roc_auc": 0.9217105422050477,
+            "precision": 0.3010752688172043,
+            "recall": 0.4,
+            "f1": 0.34355828220858897,
+            "confusion_matrix": [
+              [
+                11700,
+                130
+              ],
+              [
+                84,
+                56
+              ]
+            ],
+            "pos_count": 140,
+            "neg_count": 11830,
+            "prevalence": 0.011695906432748537,
+            "pred_pos_count": 186
+          },
+          "test": {
+            "pr_auc": 0.4266861154151236,
+            "roc_auc": 0.9367704990989012,
+            "precision": 0.39896373056994816,
+            "recall": 0.5150501672240803,
+            "f1": 0.44963503649635034,
+            "confusion_matrix": [
+              [
+                11439,
+                232
+              ],
+              [
+                145,
+                154
+              ]
+            ],
+            "pos_count": 299,
+            "neg_count": 11671,
+            "prevalence": 0.024979114452798663,
+            "pred_pos_count": 386
+          }
+        }
+      }
+    }
+  },
+  "regression_evaluation": {
+    "Baseline_Recent_Activity": {
+      "mae": 0.6907976886661097,
+      "rmse": 4.562556892436768,
+      "r2": 0.2986562861731201
+    },
+    "Baseline_Trailing_7Day": {
+      "mae": 0.8717978544244208,
+      "rmse": 5.096511032857405,
+      "r2": 0.12489480833130684
+    },
+    "Random_Forest_Regressor": {
+      "mae": 0.9482172455477418,
+      "rmse": 4.4424033331041795,
+      "r2": 0.3351092430959529
+    },
+    "Ridge_Regressor": {
+      "mae": 1.6100255240141808,
+      "rmse": 4.284792740996942,
+      "r2": 0.381451209380387
+    }
+  },
+  "spatial_generalization": {
+    "coastal_xgb": {
+      "pr_auc": 0.4335168342589053,
+      "roc_auc": 0.9463611187283989,
+      "precision": 0.4897959183673469,
+      "recall": 0.4948453608247423,
+      "f1": 0.49230769230769234,
+      "confusion_matrix": [
+        [
+          4123,
+          50
+        ],
+        [
+          49,
+          48
+        ]
+      ],
+      "pos_count": 97,
+      "neg_count": 4173,
+      "prevalence": 0.02271662763466042,
+      "pred_pos_count": 98
+    },
+    "coastal_baseline_7d": {
+      "pr_auc": 0.2943649081683656,
+      "roc_auc": 0.9005561031767796,
+      "precision": 0.25691699604743085,
+      "recall": 0.6701030927835051,
+      "f1": 0.37142857142857144,
+      "confusion_matrix": [
+        [
+          3985,
+          188
+        ],
+        [
+          32,
+          65
+        ]
+      ],
+      "pos_count": 97,
+      "neg_count": 4173,
+      "prevalence": 0.02271662763466042,
+      "pred_pos_count": 253,
+      "mae": 0.4270674138507862,
+      "rmse": 2.3815964391958637,
+      "r2": 0.02426962060746385
+    },
+    "offshore_xgb": {
+      "pr_auc": 0.5066936512706535,
+      "roc_auc": 0.9315234765940384,
+      "precision": 0.4825,
+      "recall": 0.5119363395225465,
+      "f1": 0.4967824967824968,
+      "confusion_matrix": [
+        [
+          7116,
+          207
+        ],
+        [
+          184,
+          193
+        ]
+      ],
+      "pos_count": 377,
+      "neg_count": 7323,
+      "prevalence": 0.04896103896103896,
+      "pred_pos_count": 400
+    },
+    "offshore_baseline_7d": {
+      "pr_auc": 0.3790309402426011,
+      "roc_auc": 0.8600052304229509,
+      "precision": 0.2978723404255319,
+      "recall": 0.6684350132625995,
+      "f1": 0.41210139002452983,
+      "confusion_matrix": [
+        [
+          6729,
+          594
+        ],
+        [
+          125,
+          252
+        ]
+      ],
+      "pos_count": 377,
+      "neg_count": 7323,
+      "prevalence": 0.04896103896103896,
+      "pred_pos_count": 846,
+      "mae": 1.1184210987425274,
+      "rmse": 6.101888327338257,
+      "r2": 0.13032213360849487
+    },
+    "top_cells": {
+      "cell_16.25_72.00_0.25": {
+        "active_days_test": 25,
+        "total_days_test": 70,
+        "xgb_f1": 0.8148148148148148,
+        "xgb_pr_auc": 0.8872014857340204,
+        "b7d_f1": 0.7058823529411765,
+        "b7d_pr_auc": 0.6997434010194653
+      },
+      "cell_16.50_72.00_0.25": {
+        "active_days_test": 22,
+        "total_days_test": 70,
+        "xgb_f1": 0.7391304347826086,
+        "xgb_pr_auc": 0.7446954812863904,
+        "b7d_f1": 0.6666666666666666,
+        "b7d_pr_auc": 0.49495829661377905
+      },
+      "cell_15.50_72.50_0.25": {
+        "active_days_test": 20,
+        "total_days_test": 70,
+        "xgb_f1": 0.5909090909090909,
+        "xgb_pr_auc": 0.6779272558908189,
+        "b7d_f1": 0.6229508196721312,
+        "b7d_pr_auc": 0.5435481413476536
+      },
+      "cell_15.50_72.75_0.25": {
+        "active_days_test": 17,
+        "total_days_test": 70,
+        "xgb_f1": 0.6111111111111112,
+        "xgb_pr_auc": 0.706695302678086,
+        "b7d_f1": 0.5454545454545454,
+        "b7d_pr_auc": 0.6458520344948137
+      },
+      "cell_15.50_73.00_0.25": {
+        "active_days_test": 16,
+        "total_days_test": 70,
+        "xgb_f1": 0.6486486486486487,
+        "xgb_pr_auc": 0.7130651946093123,
+        "b7d_f1": 0.6274509803921569,
+        "b7d_pr_auc": 0.649651181589321
+      }
+    }
+  },
+  "feature_importances": {
+    "fishing_hours_14d_mean": 0.5852974057197571,
+    "fishing_hours_7d_pos_freq": 0.12144774198532104,
+    "fishing_hours_7d_max": 0.06553210318088531,
+    "cos_day_of_year": 0.03233087807893753,
+    "wind_speed": 0.031076937913894653,
+    "longitude": 0.026314429938793182,
+    "fishing_hours_recent": 0.024464622139930725,
+    "latitude": 0.018717540428042412,
+    "distance_to_coast_km": 0.017075641080737114,
+    "regional_fishing_hours_T": 0.008212035521864891,
+    "fishing_hours_lag_2": 0.007674621883779764,
+    "sin_day_of_year": 0.007295189891010523,
+    "fishing_hours_lag_3": 0.007012294605374336,
+    "day_of_week": 0.006502664647996426,
+    "wave_period": 0.006237160414457321,
+    "ocean_current_velocity": 0.005942110437899828,
+    "day_of_year": 0.005857964511960745,
+    "fishing_hours_lag_1": 0.004860690329223871,
+    "wave_direction_sin": 0.004770034458488226,
+    "wave_height": 0.004089479800313711,
+    "wave_direction_cos": 0.0033906567841768265,
+    "swell_wave_height": 0.002327145077288151,
+    "fishing_hours_7d_std": 0.0023158828262239695,
+    "fishing_hours_7d_mean": 0.001254699775017798,
+    "wave_height_isna": 0.0,
+    "ocean_current_isna": 0.0,
+    "wind_speed_isna": 0.0,
+    "is_coastal": 0.0,
+    "month": 0.0
+  },
+  "acceptance": {
+    "status": "ACCEPT",
+    "verdict": "ML demonstrates sufficient predictive value over historical baselines.",
+    "ml_test_f1": 0.49588477366255146,
+    "max_baseline_f1": 0.48232848232848236,
+    "ml_test_prauc": 0.4897564017041189,
+    "max_baseline_prauc": 0.3790477797398105
+  }
+}

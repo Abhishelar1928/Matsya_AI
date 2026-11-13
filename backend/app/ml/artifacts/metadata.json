@@ -1,0 +1,63 @@
+{
+  "training_start_date": "2023-01-01",
+  "training_end_date": "2023-08-07",
+  "training_rows": 37449,
+  "grid_cells": 171,
+  "features": [
+    "wave_height",
+    "wave_period",
+    "wave_direction",
+    "swell_wave_height",
+    "wind_speed",
+    "ocean_current_velocity",
+    "distance_to_coast_km",
+    "day_of_year"
+  ],
+  "target_definition": "predicted apparent fishing activity (derived from GFW AIS data)",
+  "target_threshold": 21.346874999999997,
+  "classification_threshold": 0.25,
+  "model_type": "XGBoost",
+  "validation_metrics": {
+    "f1": 0.017391304347826087,
+    "p": 0.0136986301369863,
+    "r": 0.023809523809523808,
+    "roc": 0.7049339549339549,
+    "pr": 0.006622485486472907,
+    "cm": [
+      [
+        12369,
+        72
+      ],
+      [
+        41,
+        1
+      ]
+    ],
+    "pred_pos": 73,
+    "act_pos": 42
+  },
+  "test_metrics": {
+    "f1": 0.011049723756906077,
+    "p": 0.0136986301369863,
+    "r": 0.009259259259259259,
+    "roc": 0.8525544332210999,
+    "pr": 0.035596212545392386,
+    "cm": [
+      [
+        12303,
+        72
+      ],
+      [
+        107,
+        1
+      ]
+    ],
+    "pred_pos": 73,
+    "act_pos": 108
+  },
+  "training_timestamp": "2026-09-04T20:34:25.927128+00:00",
+  "notes": [
+    "GFW represents apparent fishing effort/activity, not fish biomass.",
+    "This is a 2023 historical model."
+  ]
+}

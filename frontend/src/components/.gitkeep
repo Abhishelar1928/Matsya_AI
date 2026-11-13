@@ -1,0 +1,10 @@
+# Components
+
+Reusable React UI components for the MatsyaAI application.
+
+Will include components for:
+- Status badges
+- Condition cards
+- Navigation compass
+- Zone cards
+- Map overlays

@@ -1,0 +1,79 @@
+--- LINKS ---
+ : /site/index.jsp
+ : /site/sitemap.jsp
+Facebook : https://facebook.com/incoismoes
+Twitter / X : https://x.com/incoismoes
+YouTube : https://youtube.com/@incoismoes
+Instagram : https://instagram.com/incoismoes
+LinkedIn : https://linkedin.com/company/incoismoes
+RTI : /site/rti.jsp
+Tenders : /site/tenders.jsp
+Vacancies : https://vacancies.incois.gov.in
+ : /site/index.jsp
+About INCOIS : /site/aboutus.jsp
+Vision and Mission : /site/vision.jsp
+Our Minister : /site/minister.jsp
+Our Secretary : /site/chairman.jsp
+Our Director : /site/director.jsp
+Ogranization Structure : /site/structure.jsp
+Who is who : /site/whos_who.jsp
+Ecosystem Services : /site/ecosystem.jsp
+Multi-Hazard Services : /site/multihazard.jsp
+Forecast / Nowcast Services : /site/forecast.jsp
+Climate Services : /site/climate-change.jsp
+International Services : /site/international.jsp
+Data Holdings : /site/dataholdings.jsp
+Ocean Observation : /site/datainfo/OON.jsp
+Remote Sensing : /site/datainfo/remotesensing.jsp
+Project Datasets : /site/uc.jsp
+Live Access Server : https://las.incois.gov.in/
+ERDDAP : https://erddap.incois.gov.in/
+MoES-NOAA OMNI-RAMA Joint Data Portal : /site/datainfo/jointportal.jsp
+Earth System Science Data Portal : https://incois.gov.in/essdp/
+Modelling & Research : /site/datainfo/modelling/modelling.jsp
+Deep Ocean Mission : /site/deep-ocean.jsp
+Mausam Mission : /site/mausam_misson.jsp
+Monsoon Mission : /site/uc.jsp
+ITCOocean : /site/itcoocean/ITCOocean.jsp
+HPC : /site/services/hpc.jsp
+Web Development : /site/services/software.jsp
+Software Development : /site/services/software.jsp
+Communication Network : /site/services/comm-network.jsp
+Disseminate Information : /site/uc.jsp
+IOGOOS : /IIW/IOGOOS/home.jsp
+SIBER : /IIW/SIBER/home.jsp
+IIOE : /IIW/IIOE/home.jsp
+IIOE-2 : https://incois.gov.in/IIOE-2/index.jsp
+NDCC : /IIW/NDCC/index.jsp
+DCC-IOR : /IIW/DCCIOR/index.jsp
+Annual Reports : /site/annual_report.jsp
+Technical Reports : /site/technical_report.jsp
+Research Publications : /site/research_pub.jsp
+General Reports : /site/general_reports.jsp
+News & Announcements : /site/news.jsp
+Awards : /site/awards.jsp
+Events : /site/events.jsp
+Internal Complaints Committee : /site/icc.jsp
+Photo / Video Gallery : /site/gallery.jsp
+Documentary Films : https://youtube.com/playlist?list=PLWhan-NjT91bUhEZvZlLHci8zZttVQ2Ev&si=vtsxMgPoAhCRwnU4
+Ocean Tutor : https://incois.gov.in/Tutor/index.html
+Contact Us : /site/contactus.jsp
+Home : /site/index.jsp
+Marine Fishery Advisories : MarineFisheryAdvisory
+Potential Fishing Zone : PfzAdvisory
+ : https://moes.gov.in/
+ : https://www.niot.res.in/
+ : https://seismo.gov.in/
+ : https://ncess.gov.in/
+ : https://www.tropmet.res.in
+ : https://www.nccr.gov.in/
+ : https://www.ncmrwf.gov.in/
+ : https://www.cmlre.gov.in/
+ : https://ncpor.res.in/
+ : https://mausam.imd.gov.in
+Disclaimer : /site/disclaimer.jsp
+ : https://seal.atlas.globalsign.com/gss/profile/one?p1=incois.gov.in&p2=U9ALUGRIZvoshrItiaYK66NJxYfXkAYjeiCdrDfoIXY=&p3=gs
+
+--- DATES IN HOME PAGE ---
+
+--- DATES IN DATA PAGE ---

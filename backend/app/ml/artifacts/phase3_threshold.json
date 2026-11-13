@@ -1,0 +1,5 @@
+{
+  "value": 21.346874999999997,
+  "percentile": 0.75,
+  "computed_from": "train_split_non_zero_fishing_hours"
+}

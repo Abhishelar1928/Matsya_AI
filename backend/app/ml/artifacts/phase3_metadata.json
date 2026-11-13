@@ -1,0 +1,179 @@
+{
+  "model_label": "2023 historical model",
+  "model_disclaimer": "This model predicts apparent fishing activity based on GFW historical patterns for the full year 2023. It does NOT predict fish presence, biomass, catch probability, or safety.",
+  "model_type": "LogisticRegression",
+  "target_definition": "predicted apparent fishing activity (derived from GFW AIS data)",
+  "threshold": 21.346874999999997,
+  "training_date_range": [
+    "2023-01-01",
+    "2023-08-07"
+  ],
+  "validation_date_range": [
+    "2023-08-08",
+    "2023-10-19"
+  ],
+  "test_date_range": [
+    "2023-10-20",
+    "2023-12-31"
+  ],
+  "feature_columns": [
+    "fishing_hours_recent",
+    "fishing_hours_lag_1",
+    "fishing_hours_lag_2",
+    "fishing_hours_lag_3",
+    "fishing_hours_7d_mean",
+    "fishing_hours_7d_max",
+    "fishing_hours_7d_std",
+    "fishing_hours_7d_pos_freq",
+    "fishing_hours_14d_mean",
+    "regional_fishing_hours_T",
+    "wave_height",
+    "wave_period",
+    "wave_direction_sin",
+    "wave_direction_cos",
+    "swell_wave_height",
+    "ocean_current_velocity",
+    "wind_speed",
+    "wave_height_isna",
+    "ocean_current_isna",
+    "wind_speed_isna",
+    "latitude",
+    "longitude",
+    "distance_to_coast_km",
+    "is_coastal",
+    "day_of_year",
+    "month",
+    "day_of_week",
+    "sin_day_of_year",
+    "cos_day_of_year"
+  ],
+  "feature_importance": {},
+  "dataset_size": 35405,
+  "class_distribution": {
+    "train": {
+      "0": 20834,
+      "1": 409
+    },
+    "val": {
+      "0": 7039,
+      "1": 42
+    },
+    "test": {
+      "0": 6948,
+      "1": 133
+    }
+  },
+  "validation_metrics": {
+    "Baseline": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": {
+        "0": 7039,
+        "1": 42
+      },
+      "roc_auc": 0.5,
+      "pr_auc": 0.0059,
+      "confusion_matrix": [
+        [
+          7039,
+          0
+        ],
+        [
+          42,
+          0
+        ]
+      ]
+    },
+    "LogisticRegression": {
+      "precision": 0.2063,
+      "recall": 0.3095,
+      "f1": 0.2476,
+      "support": {
+        "0": 7039,
+        "1": 42
+      },
+      "roc_auc": 0.7547,
+      "pr_auc": 0.12,
+      "confusion_matrix": [
+        [
+          6989,
+          50
+        ],
+        [
+          29,
+          13
+        ]
+      ]
+    },
+    "RandomForest": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": {
+        "0": 7039,
+        "1": 42
+      },
+      "roc_auc": 0.8359,
+      "pr_auc": 0.0892,
+      "confusion_matrix": [
+        [
+          7039,
+          0
+        ],
+        [
+          42,
+          0
+        ]
+      ]
+    },
+    "XGBoost": {
+      "precision": 0.1429,
+      "recall": 0.0238,
+      "f1": 0.0408,
+      "support": {
+        "0": 7039,
+        "1": 42
+      },
+      "roc_auc": 0.7234,
+      "pr_auc": 0.0485,
+      "confusion_matrix": [
+        [
+          7033,
+          6
+        ],
+        [
+          41,
+          1
+        ]
+      ]
+    }
+  },
+  "test_metrics": {
+    "precision": 0.4259,
+    "recall": 0.3459,
+    "f1": 0.3817,
+    "support": {
+      "0": 6948,
+      "1": 133
+    },
+    "roc_auc": 0.8831,
+    "pr_auc": 0.3216,
+    "confusion_matrix": [
+      [
+        6886,
+        62
+      ],
+      [
+        87,
+        46
+      ]
+    ]
+  },
+  "data_sources": {
+    "target": "GFW 4Wings Report API v4 (public-global-fishing-effort)",
+    "environmental": "Open-Meteo Historical Marine + Weather API",
+    "spatial": "0.25\u00b0 grid, Maharashtra coast (15.5-20.0\u00b0N, 72.0-74.0\u00b0E)"
+  },
+  "training_timestamp": "2026-10-04T21:05:26.831186+00:00"
+}

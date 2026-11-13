@@ -1,0 +1,107 @@
+# =============================================================================
+# MatsyaAI Maharashtra — Docker Compose
+# =============================================================================
+# Services: PostgreSQL+PostGIS, FastAPI backend, React+Vite frontend
+# Usage:    docker compose up --build
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL + PostGIS
+  # ---------------------------------------------------------------------------
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: matsya_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-matsya}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-matsya_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-matsya_ai}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-matsya} -d ${POSTGRES_DB:-matsya_ai}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - matsya_net
+
+  # ---------------------------------------------------------------------------
+  # FastAPI Backend
+  # ---------------------------------------------------------------------------
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    container_name: matsya_backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-matsya}:${POSTGRES_PASSWORD:-matsya_dev}@db:5432/${POSTGRES_DB:-matsya_ai}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app/backend
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - matsya_net
+
+  # ---------------------------------------------------------------------------
+  # Ingestion Daemon
+  # ---------------------------------------------------------------------------
+  ingestion:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    container_name: matsya_ingestion
+    restart: unless-stopped
+    command: python backend/scripts/run_ingestion.py --daemon
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-matsya}:${POSTGRES_PASSWORD:-matsya_dev}@db:5432/${POSTGRES_DB:-matsya_ai}
+    volumes:
+      - ./backend:/app/backend
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - matsya_net
+
+  # ---------------------------------------------------------------------------
+  # React + Vite Frontend
+  # ---------------------------------------------------------------------------
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+    container_name: matsya_frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend/src:/app/frontend/src
+      - ./frontend/public:/app/frontend/public
+      - ./frontend/index.html:/app/frontend/index.html
+      - ./frontend/vite.config.ts:/app/frontend/vite.config.ts
+    depends_on:
+      - backend
+    environment:
+      VITE_BACKEND_URL: http://backend:8000
+    networks:
+      - matsya_net
+
+volumes:
+  pgdata:
+    driver: local
+
+networks:
+  matsya_net:
+    driver: bridge

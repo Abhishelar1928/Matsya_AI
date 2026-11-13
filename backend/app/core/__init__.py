@@ -1,0 +1,1 @@
+"""MatsyaAI Maharashtra — Core package."""

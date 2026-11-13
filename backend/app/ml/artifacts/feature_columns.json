@@ -1,0 +1,10 @@
+[
+  "wave_height",
+  "wave_period",
+  "wave_direction",
+  "swell_wave_height",
+  "wind_speed",
+  "ocean_current_velocity",
+  "distance_to_coast_km",
+  "day_of_year"
+]

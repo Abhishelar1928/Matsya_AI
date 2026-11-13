@@ -1,0 +1,69 @@
+--- PAGE TEXT ---
+Marine Fisheries Advisory Text Data
+MATCH: Marine Fisheries Advisory Text Data
+INCOIS | Indian National Centre for Ocean Information Services
+Indian National Centre for Ocean Information Services
+(An Autonomous Body under the
+Ministry of Earth Sciences, Govt. of India)
+A+
+A+ Increase
+A− Decrease
+A
+A  English
+अ  हिन्दी
+అ  తెలుగు
+Facebook
+Twitter / X
+YouTube
+Instagram
+LinkedIn
+RTI |
+Tenders |
+Vacancies
+Close
+About Us
+About INCOIS
+Vision and Mission
+Our Minister
+Our Secretary
+Our Director
+Ogranization Structure
+Who is who
+Services
+Ecosystem Services
+Multi-Hazard Services
+Forecast / Nowcast Services
+MATCH: Forecast / Nowcast Services
+Climate Services
+International Services
+Ocean Observations & Data
+Data Holdings
+Ocean Observation
+Remote Sensing
+Project Datasets
+Live Access Server
+ERDDAP
+MoES-NOAA OMNI-RAMA Joint Data Portal
+Earth System Science Data Portal
+Applied Research
+Modelling & Research
+Missions
+Deep Ocean Mission
+Mausam Mission
+Monsoon Mission
+
+--- IMAGES ---
+/site/incois-images/logo.png
+/MarineFisheries/images/excel_logo.jpg
+/MarineFisheries/pfz/logo/print_logo.jpg
+/site/incois-images/moes-org/1.svg
+/site/incois-images/moes-org/2.svg
+/site/incois-images/moes-org/3.svg
+/site/incois-images/moes-org/4.svg
+/site/incois-images/moes-org/5.svg
+/site/incois-images/moes-org/6.svg
+/site/incois-images/moes-org/7.svg
+/site/incois-images/moes-org/8.svg
+/site/incois-images/moes-org/9.svg
+/site/incois-images/moes-org/10.svg
+/site/incois-images/ssl-secure_new.png

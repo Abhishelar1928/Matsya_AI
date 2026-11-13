@@ -1,0 +1,259 @@
+/* ==========================================================================
+   MatsyaAI Maharashtra — Global Styles
+   Design: Ocean-themed, mobile-first, fisherman-friendly
+   ========================================================================== */
+
+/* --- CSS Custom Properties (Design Tokens) --- */
+:root {
+  /* Ocean palette */
+  --color-ocean-deep: #0a1628;
+  --color-ocean-dark: #0f2035;
+  --color-ocean-mid: #143050;
+  --color-ocean-surface: #1a4070;
+  --color-ocean-light: #2563a8;
+  --color-ocean-shimmer: #38bdf8;
+
+  /* Status colours */
+  --color-safe: #22c55e;
+  --color-safe-glow: rgba(34, 197, 94, 0.25);
+  --color-caution: #eab308;
+  --color-caution-glow: rgba(234, 179, 8, 0.25);
+  --color-danger: #ef4444;
+  --color-danger-glow: rgba(239, 68, 68, 0.25);
+
+  /* Neutrals */
+  --color-white: #f8fafc;
+  --color-text: #e2e8f0;
+  --color-text-muted: #94a3b8;
+  --color-text-dim: #64748b;
+  --color-glass: rgba(15, 32, 53, 0.65);
+  --color-glass-border: rgba(56, 189, 248, 0.12);
+
+  /* Typography */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 2rem;
+  --font-size-4xl: 2.5rem;
+  --font-size-hero: 3.5rem;
+
+  /* Spacing */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+
+  /* Borders & Radii */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-glow: 0 0 40px rgba(56, 189, 248, 0.08);
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.3);
+  --shadow-elevated: 0 8px 40px rgba(0, 0, 0, 0.4);
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 400ms ease;
+}
+
+/* --- Reset & Base --- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-family);
+  background: var(--color-ocean-deep);
+  color: var(--color-text);
+  min-height: 100vh;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* --- Animated ocean background --- */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse at 20% 80%, rgba(56, 189, 248, 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(37, 99, 168, 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse at 50% 50%, rgba(20, 48, 80, 0.4) 0%, transparent 70%),
+    linear-gradient(180deg, var(--color-ocean-deep) 0%, #071220 100%);
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+a {
+  color: var(--color-ocean-shimmer);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--color-white);
+}
+
+/* --- Utility Classes --- */
+.container {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 var(--space-lg);
+}
+
+@media (min-width: 768px) {
+  .container {
+    max-width: 720px;
+  }
+}
+
+/* --- Glass Card --- */
+.glass-card {
+  background: var(--color-glass);
+  border: 1px solid var(--color-glass-border);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: var(--shadow-card);
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+
+.glass-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-elevated);
+}
+
+/* --- Status Badge --- */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-full);
+  font-weight: 700;
+  font-size: var(--font-size-lg);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.status-badge--safe {
+  background: var(--color-safe-glow);
+  color: var(--color-safe);
+  box-shadow: 0 0 20px var(--color-safe-glow);
+}
+
+.status-badge--caution {
+  background: var(--color-caution-glow);
+  color: var(--color-caution);
+  box-shadow: 0 0 20px var(--color-caution-glow);
+}
+
+.status-badge--danger {
+  background: var(--color-danger-glow);
+  color: var(--color-danger);
+  box-shadow: 0 0 20px var(--color-danger-glow);
+}
+
+/* --- Primary Button --- */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  width: 100%;
+  padding: var(--space-lg) var(--space-xl);
+  background: linear-gradient(135deg, var(--color-ocean-light) 0%, var(--color-ocean-shimmer) 100%);
+  color: var(--color-white);
+  font-family: var(--font-family);
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  min-height: 56px;
+  /* Large touch target */
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(56, 189, 248, 0.3);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+/* --- Pulse animation for status dot --- */
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.2); }
+}
+
+.pulse-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.pulse-dot--safe { background: var(--color-safe); }
+.pulse-dot--caution { background: var(--color-caution); }
+.pulse-dot--danger { background: var(--color-danger); }
+
+/* --- Wave animation at bottom --- */
+@keyframes wave {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* --- Fade-in animation --- */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.fade-in-up--delay-1 { animation-delay: 0.1s; opacity: 0; }
+.fade-in-up--delay-2 { animation-delay: 0.2s; opacity: 0; }
+.fade-in-up--delay-3 { animation-delay: 0.3s; opacity: 0; }
+.fade-in-up--delay-4 { animation-delay: 0.4s; opacity: 0; }
