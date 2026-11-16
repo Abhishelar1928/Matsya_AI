@@ -16,27 +16,31 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from backend.app.core.database import get_db
+from backend.app.core.landing_centres import LANDING_CENTRES
 from backend.app.api.v1.predictions import fetch_latest_persisted_predictions
 from backend.app.ml.dataset_builder import _LANDING_CENTRES
 from backend.app.ml.inference import get_inference_pipeline
 from backend.app.ml.safety_gate import SafetyGate
 from backend.app.models.incois_pfz import INCOISPFZAdvisory
 from backend.app.services.freshness.source_tracker import SourceFreshnessTracker
+from backend.app.services.pfz_query import get_latest_pfz_batch
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/map", tags=["Map"])
 
+# Display list derived from the canonical registry (backend/app/core/landing_centres.py).
 LANDING_CENTRE_METADATA = [
-    {"name": "Mumbai - Sassoon Dock", "district": "Mumbai", "latitude": 19.0760, "longitude": 72.8777},
-    {"name": "Mumbai - Versova", "district": "Mumbai", "latitude": 18.9388, "longitude": 72.8354},
-    {"name": "Palghar - Arnala", "district": "Palghar", "latitude": 19.2183, "longitude": 72.8145},
-    {"name": "Ratnagiri - Mirkarwada", "district": "Ratnagiri", "latitude": 18.2513, "longitude": 73.2698},
-    {"name": "Ratnagiri - Harnai", "district": "Ratnagiri", "latitude": 17.6835, "longitude": 73.3011},
-    {"name": "Sindhudurg - Malvan", "district": "Sindhudurg", "latitude": 16.0600, "longitude": 73.4700},
-    {"name": "Sindhudurg - Devgad", "district": "Sindhudurg", "latitude": 15.7280, "longitude": 73.5150},
-    {"name": "Raigad - Alibaug", "district": "Raigad", "latitude": 18.7495, "longitude": 72.8242},
-    {"name": "Palghar - Satpati", "district": "Palghar", "latitude": 19.8135, "longitude": 72.7557},
+    {
+        "id": lc.id,
+        "name": f"{lc.district} - {lc.name}",
+        "name_mr": lc.name_mr,
+        "district": lc.district,
+        "latitude": lc.latitude,
+        "longitude": lc.longitude,
+        "verified": lc.verified,
+    }
+    for lc in LANDING_CENTRES
 ]
 
 
@@ -76,52 +80,7 @@ async def get_map_summary(
         safety_message = "Marine warning feed unavailable. Check official local port signals before sailing."
 
     # 3. Official INCOIS PFZ
-    pfz_data = {
-        "status": "UNAVAILABLE",
-        "advisory_date": None,
-        "validity_date": None,
-        "count": 0,
-        "locations": [],
-        "source": "INCOIS (Official Government Advisory)",
-    }
-
-    if db is not None:
-        try:
-            from sqlalchemy import select
-            stmt = select(INCOISPFZAdvisory).order_by(INCOISPFZAdvisory.retrieved_at.desc()).limit(1)
-            result = await db.execute(stmt)
-            latest_record = result.scalars().first()
-            if latest_record:
-                retrieval_time = latest_record.retrieved_at
-                stmt_batch = select(INCOISPFZAdvisory).where(INCOISPFZAdvisory.retrieved_at == retrieval_time)
-                res_batch = await db.execute(stmt_batch)
-                records = res_batch.scalars().all()
-                now = datetime.now(timezone.utc)
-                status_str = "LIVE"
-                if latest_record.validity_date and latest_record.validity_date < now:
-                    status_str = "STALE"
-
-                locations = []
-                for r in records:
-                    locations.append({
-                        "landing_centre": r.landing_centre,
-                        "direction": r.direction,
-                        "bearing_degrees": r.bearing_degrees,
-                        "distance_km": r.distance_km,
-                        "latitude": r.latitude,
-                        "longitude": r.longitude,
-                    })
-
-                pfz_data = {
-                    "status": status_str,
-                    "advisory_date": latest_record.advisory_date.isoformat() if latest_record.advisory_date else None,
-                    "validity_date": latest_record.validity_date.isoformat() if latest_record.validity_date else None,
-                    "count": len(locations),
-                    "locations": locations,
-                    "source": "INCOIS (Official Government Advisory)",
-                }
-        except Exception as e:
-            logger.warning(f"Failed to query database for PFZ records: {e}")
+    pfz_data = await get_latest_pfz_batch(db)
 
     # If DB has no PFZ and in DEMO mode, provide documented sample coordinates from INCOIS feed
     if pfz_data["count"] == 0 and (demo or pipeline.demo_mode):

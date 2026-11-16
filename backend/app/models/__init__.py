@@ -20,3 +20,10 @@ __all__ = [
 from backend.app.models.feature import SpatialGrid, ModelFeature
 
 from backend.app.models.incois_pfz import INCOISPFZAdvisory
+
+from backend.app.models.expedition import (
+    Expedition,
+    ExpeditionTrackPoint,
+    CatchRecord,
+    FieldObservation,
+)

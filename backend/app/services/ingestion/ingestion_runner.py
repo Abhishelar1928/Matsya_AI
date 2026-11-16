@@ -59,19 +59,37 @@ class IngestionRunner:
             }
 
     async def run_open_meteo(self, db: Optional[AsyncSession] = None) -> Dict[str, Any]:
-        """Runs Open-Meteo current condition refresh."""
-        # For Open-Meteo, the inference pipeline pulls the latest env data when predicting.
-        # This acts as a pulse-check that it is available.
-        # We don't need to persist open meteo current observation here unless it's designed.
-        # Following constraints: do not rewrite provider logic. Just verify it.
+        """Fetches current Open-Meteo marine conditions and persists them to ocean_observations.
+
+        Without a DB session this is a no-op pulse check (nothing is fetched or fabricated).
+        """
+        from sqlalchemy import insert
+        from backend.app.models.ocean_observation import OceanObservation
+        from backend.app.services.ingestion.providers import OpenMeteoMarineProvider
+
+        if db is None:
+            return {"status": "SUCCESS", "records": 0, "error": None}
+
         try:
-            return {
-                "status": "SUCCESS",
-                "records": 0, # fetched dynamically during inference
-                "error": None
-            }
+            records = await OpenMeteoMarineProvider().execute()
+            if not records:
+                return {
+                    "status": "ERROR",
+                    "records": 0,
+                    "error": "Open-Meteo returned no valid records (see provider log)",
+                }
+
+            now = datetime.now(timezone.utc)
+            for r in records:
+                obs_time = r.get("source_publication_time")
+                r["is_stale"] = obs_time is None or (now - obs_time).total_seconds() > 48 * 3600
+
+            await db.execute(insert(OceanObservation).values(records))
+            await db.commit()
+            return {"status": "SUCCESS", "records": len(records), "error": None}
         except Exception as e:
-            logger.exception("Open-Meteo orchestration check failure")
+            await db.rollback()
+            logger.exception("Open-Meteo ingestion failure")
             return {
                 "status": "ERROR",
                 "records": 0,

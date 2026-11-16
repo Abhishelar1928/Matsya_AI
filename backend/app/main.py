@@ -23,6 +23,10 @@ from backend.app.api.v1 import predictions as predictions_v1
 from backend.app.api.v1 import pfz as pfz_v1
 from backend.app.api.v1 import map as map_v1
 from backend.app.api.v1 import sources as sources_v1
+from backend.app.api.v1 import expedition as expedition_v1
+from backend.app.api.v1 import marine as marine_v1
+from backend.app.services.expedition.package_builder import OFFLINE_ASSETS_DIR, OFFLINE_ASSETS_URL
+from fastapi.staticfiles import StaticFiles
 
 # ---------------------------------------------------------------------------
 # Lifespan: startup / shutdown
@@ -79,6 +83,14 @@ app.include_router(predictions_v1.router, prefix="/api/v1")
 app.include_router(pfz_v1.router, prefix="/api/v1")
 app.include_router(map_v1.router, prefix="/api/v1")
 app.include_router(sources_v1.router, prefix="/api/v1")
+app.include_router(expedition_v1.router, prefix="/api/v1")
+app.include_router(marine_v1.router, prefix="/api/v1")
+
+# Offline basemap (PMTiles) and bathymetry contours for Expedition Mode.
+# Served under /api so the Vite dev proxy forwards it. StaticFiles supports
+# HTTP Range requests, which PMTiles relies on.
+OFFLINE_ASSETS_DIR.mkdir(parents=True, exist_ok=True)
+app.mount(OFFLINE_ASSETS_URL, StaticFiles(directory=OFFLINE_ASSETS_DIR), name="offline-assets")
 
 
 # ---------------------------------------------------------------------------
