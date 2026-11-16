@@ -91,10 +91,14 @@ services:
       - ./frontend/public:/app/frontend/public
       - ./frontend/index.html:/app/frontend/index.html
       - ./frontend/vite.config.ts:/app/frontend/vite.config.ts
+      # Dev HTTPS certs for phone testing (bash scripts/dev-https/generate-dev-certs.sh).
+      # If the folder is empty the dev server stays on plain HTTP.
+      - ./frontend/certs:/app/frontend/certs:ro
     depends_on:
       - backend
     environment:
       VITE_BACKEND_URL: http://backend:8000
+      VITE_POLL: "1"   # file-change polling (bind mounts on Windows/macOS don't emit inotify events)
     networks:
       - matsya_net
 

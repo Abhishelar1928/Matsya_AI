@@ -1,122 +1,52 @@
-import React from 'react';
-import type { SourceFreshness, SourceFreshnessState } from '../types/map';
+/**
+ * Data source freshness list — one row per upstream source with status,
+ * data timestamp and age. (Name kept for backwards compatibility.)
+ */
 
-interface FreshnessHUDProps {
-  freshness: SourceFreshness;
-  isMarathi: boolean;
+import type { SourceFreshness, SourceFreshnessState } from '../types/map';
+import { freshnessMeta } from '../lib/status';
+import { fmtDateTime } from '../lib/format';
+import { StatusBadge } from './ui';
+
+const SOURCES: { key: keyof SourceFreshness; name: [string, string]; detail: [string, string] }[] = [
+  { key: 'imd_marine_warnings', name: ['IMD marine warnings', 'IMD सागरी चेतावणी'], detail: ['Mumbai fishermen bulletin', 'मुंबई मच्छीमार बुलेटिन'] },
+  { key: 'incois_pfz', name: ['INCOIS PFZ advisory', 'INCOIS PFZ सल्ला'], detail: ['Potential fishing zones', 'संभाव्य मासेमारी क्षेत्रे'] },
+  { key: 'open_meteo_marine', name: ['Open-Meteo marine', 'Open-Meteo सागरी'], detail: ['Waves & wind observations', 'लाटा व वारा निरीक्षण'] },
+  { key: 'global_fishing_watch', name: ['Global Fishing Watch', 'Global Fishing Watch'], detail: ['Historical vessel activity', 'ऐतिहासिक नौका हालचाल'] },
+];
+
+function age(s: SourceFreshnessState, mr: boolean): string {
+  if (s.age_days != null) return mr ? `${s.age_days} दिवसांपूर्वी` : `${s.age_days} d old`;
+  if (s.age_minutes == null) return '';
+  const m = Math.round(s.age_minutes);
+  if (m < 60) return mr ? `${m} मिनिटे` : `${m} min old`;
+  const h = Math.round(m / 60);
+  return mr ? `${h} तास` : h < 48 ? `${h} h old` : `${Math.round(h / 24)} d old`;
 }
 
-const getStatusDisplay = (state: SourceFreshnessState, isMarathi: boolean, isGFW = false) => {
-  const { status, data_timestamp, age_days } = state;
-
-  let label = '';
-  let color = '#aaa';
-  let dateText = '';
-
-  if (isGFW) {
-    if (status === 'CACHED_HISTORICAL') {
-      label = isMarathi ? 'ऐतिहासिक डेटा' : 'Historical data';
-      color = '#ffb300';
-      if (age_days !== null && age_days !== undefined) {
-        dateText = isMarathi ? `${age_days} दिवसांपूर्वीचा डेटा` : `Based on data from ${age_days} days ago`;
-      }
-    } else {
-      label = isMarathi ? 'डेटा अनुपलब्ध' : 'Data unavailable';
-      color = '#ff5252';
-    }
-  } else {
-    switch (status) {
-      case 'LIVE':
-        label = isMarathi ? 'वर्तमान' : 'Current';
-        color = '#00e676';
-        break;
-      case 'STALE':
-        label = isMarathi ? 'डेटा जुना असू शकतो' : 'Data may be outdated';
-        color = '#ffb300';
-        break;
-      case 'UNAVAILABLE':
-        label = isMarathi ? 'डेटा अनुपलब्ध' : 'Data unavailable';
-        color = '#ff5252';
-        break;
-      case 'ERROR':
-        label = isMarathi ? 'स्रोत तात्पुरता अनुपलब्ध' : 'Source temporarily unavailable';
-        color = '#ff5252';
-        break;
-      default:
-        label = status;
-        break;
-    }
-
-    if (data_timestamp) {
-      const d = new Date(data_timestamp);
-      dateText = `${isMarathi ? 'अद्यतनित:' : 'Updated:'} ${d.toLocaleDateString()} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
-    }
-  }
-
-  return { label, color, dateText };
-};
-
-const FreshnessCard: React.FC<{
-  title: string;
-  state: SourceFreshnessState;
-  isMarathi: boolean;
-  isGFW?: boolean;
-}> = ({ title, state, isMarathi, isGFW }) => {
-  const { label, color, dateText } = getStatusDisplay(state, isMarathi, isGFW);
-
+export function FreshnessHUD({ freshness, isMarathi }: { freshness: SourceFreshness; isMarathi: boolean }) {
+  const mr = isMarathi;
   return (
-    <div style={{
-      background: 'rgba(15, 34, 61, 0.7)',
-      border: '1px solid rgba(255,255,255,0.08)',
-      borderRadius: '8px',
-      padding: '12px',
-      flex: 1,
-      minWidth: '200px'
-    }}>
-      <div style={{ fontSize: '11px', color: '#90caf9', textTransform: 'uppercase', fontWeight: 600, marginBottom: '6px' }}>
-        {title}
-      </div>
-      <div style={{ fontSize: '12px', color: '#aaa', marginBottom: '4px' }}>
-        {dateText || (isMarathi ? 'तारीख अनुपलब्ध' : 'Date unavailable')}
-      </div>
-      <div style={{ fontSize: '13px', fontWeight: 700, color: color }}>
-        {label}
-      </div>
-    </div>
+    <ul className="list">
+      {SOURCES.map(({ key, name, detail }) => {
+        const s = freshness[key];
+        if (!s) return null;
+        return (
+          <li key={key} className="list-row">
+            <div className="list-row-main">
+              <div className="list-row-title">{name[mr ? 1 : 0]}</div>
+              <div className="list-row-sub">
+                {detail[mr ? 1 : 0]}
+                {s.data_timestamp && <> · <span className="num">{fmtDateTime(s.data_timestamp)}</span></>}
+                {age(s, mr) && <> · {age(s, mr)}</>}
+              </div>
+            </div>
+            <StatusBadge meta={freshnessMeta(s.status)} mr={mr} />
+          </li>
+        );
+      })}
+    </ul>
   );
-};
+}
 
-export const FreshnessHUD: React.FC<FreshnessHUDProps> = ({ freshness, isMarathi }) => {
-  if (!freshness) return null;
-
-  return (
-    <section style={{ marginBottom: '24px' }}>
-      <h3 style={{ margin: '0 0 12px 0', fontSize: '15px', fontWeight: 800, color: '#00e5ff' }}>
-        📡 {isMarathi ? 'डेटा अद्यतन स्थिती' : 'DATA STATUS'}
-      </h3>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-        <FreshnessCard 
-          title="INCOIS PFZ" 
-          state={freshness.incois_pfz} 
-          isMarathi={isMarathi} 
-        />
-        <FreshnessCard 
-          title="IMD Marine Warning" 
-          state={freshness.imd_marine_warnings} 
-          isMarathi={isMarathi} 
-        />
-        <FreshnessCard 
-          title="Marine Conditions" 
-          state={freshness.open_meteo_marine} 
-          isMarathi={isMarathi} 
-        />
-        <FreshnessCard 
-          title="Fishing Activity" 
-          state={freshness.global_fishing_watch} 
-          isMarathi={isMarathi} 
-          isGFW={true}
-        />
-      </div>
-    </section>
-  );
-};
+export default FreshnessHUD;

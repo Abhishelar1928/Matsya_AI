@@ -62,15 +62,30 @@ cp .env.example .env
 docker compose up --build
 ```
 
-This starts three services:
+This starts four services:
 
 | Service | Port | URL |
 |---------|------|-----|
 | **Frontend** (React + Vite) | 5173 | http://localhost:5173 |
 | **Backend** (FastAPI) | 8000 | http://localhost:8000 |
 | **Database** (PostgreSQL + PostGIS) | 5432 | `postgresql://matsya:matsya_dev@localhost:5432/matsya_ai` |
+| **Ingestion** (background data collector) | — | — |
 
-### 3. Verify
+### 3. Create the database tables (first run only)
+
+A fresh database has no tables, so the ingestion worker will log
+`relation "..." does not exist` errors until migrations are applied:
+
+```bash
+docker compose exec backend sh -c "cd /app/backend && PYTHONPATH=/app alembic upgrade head"
+docker compose restart ingestion
+```
+
+`PYTHONPATH=/app` is required because `alembic/env.py` imports `backend.app...`.
+The tables persist in the `pgdata` volume, so this is only needed again after
+`docker compose down -v`.
+
+### 4. Verify
 
 ```bash
 # Backend health check
@@ -189,6 +204,56 @@ cd backend && pytest
 ```
 
 ---
+
+## Offline Expedition Mode
+
+Switch to **🧭 Expedition** in the header (or open `http://localhost:5173/#expedition`).
+
+1. **Plan** (needs signal): pick a departure landing centre and a destination — an INCOIS PFZ
+   point or any tapped map point. The server builds an *expedition package*
+   (`POST /api/v1/expedition/packages`) with the route and waypoints, emergency return
+   harbours, INCOIS PFZ zones, IMD warnings with issue/expiry times, a 72 h wave/wind forecast
+   along the route, the latest AI prediction grid, and the safety thresholds.
+2. **Download**: shows each component's expiry (package `valid_until` = earliest one) and
+   downloads the offline basemap / depth contours into the browser cache if the files exist
+   on the server (see `backend/static/offline/README.md` to build them).
+3. **At Sea** (no connectivity needed): device GPS → position, heading, bearing/distance to
+   target, cross-track error, ETA, nearest return harbour; track points are saved locally every
+   30 s / 50 m. Safety is re-evaluated offline from the packaged warnings + forecast using the
+   same rules as the backend SafetyGate — **expired data never shows as safe**.
+4. **Catch Log**: species / weight / notes with GPS and time, stored offline.
+5. **Sync**: on reconnection, records upload idempotently (`POST /api/v1/expedition/sync`)
+   and fresh warnings/forecast/predictions are merged into the package.
+
+The app is an installable PWA (service worker precaches the shell). Known limits: browser GPS
+pauses when the screen is off (a screen wake-lock is requested while at sea; a Capacitor
+Android wrapper is the planned fix), and geolocation/service workers require HTTPS on a real
+phone (localhost is fine for development). The basemap and GEBCO contours are **not** nautical
+charts.
+
+### Testing on a phone (HTTPS)
+
+Phones only allow GPS and offline mode (service workers) on a **trusted HTTPS** address.
+
+1. Generate a local dev CA + certificate for your PC's Wi-Fi IP (re-run if the IP changes):
+   ```bash
+   bash scripts/dev-https/generate-dev-certs.sh          # auto-detects the IP
+   docker compose up -d --force-recreate frontend
+   ```
+   The dev server switches to HTTPS automatically when `frontend/certs/` exists
+   (`VITE_HTTPS=0` turns it off). The PC address becomes **https://localhost:5173**.
+2. Connect the phone to the **same Wi-Fi** as the PC.
+3. On the phone open `https://<PC-IP>:5173/dev-ca.crt` (accept the one-time warning) to download the CA.
+   - **Android:** Settings → Security & privacy → More security settings → Encryption & credentials →
+     Install a certificate → **CA certificate** → pick `matsya-dev-ca.crt`.
+   - **iPhone:** open the downloaded profile in Settings → General → VPN & Device Management → Install,
+     then Settings → General → About → Certificate Trust Settings → enable "MatsyaAI Local Dev CA".
+4. Open `https://<PC-IP>:5173/#expedition` — no warning, GPS and offline mode work. Use "Add to Home
+   screen" to install the PWA.
+5. When done testing, remove the CA from the phone (same settings screen → User credentials).
+
+`frontend/certs/ca.key` can sign certificates your phone trusts — it is git-ignored and excluded
+from Docker images; don't share it.
 
 ## Environment Variables
 

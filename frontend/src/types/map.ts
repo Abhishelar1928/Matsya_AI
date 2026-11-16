@@ -30,6 +30,8 @@ export interface PFZLocation {
   direction: string;
   bearing_degrees: number;
   distance_km: number | string;
+  depth_min_m?: number | null;
+  depth_max_m?: number | null;
   latitude: number;
   longitude: number;
 }
@@ -51,10 +53,61 @@ export interface MarineSafety {
 }
 
 export interface LandingCentre {
+  id?: string;
   name: string;
+  name_mr?: string;
   district: string;
   latitude: number;
   longitude: number;
+  verified?: boolean;
+}
+
+// --- /api/v1/marine ----------------------------------------------------------
+export interface MarineWarningItem {
+  warning_type: string;
+  severity: string;
+  description: string;
+  valid_from: string;
+  valid_until: string;
+  issued_at: string;
+  source_name: string;
+}
+
+export interface MarineWarnings {
+  status: string;
+  source: string;
+  issued_at: string | null;
+  valid_until: string | null;
+  items: MarineWarningItem[];
+}
+
+export interface HourlySeries {
+  time: string[];
+  wave_height_m: (number | null)[];
+  wave_period_s: (number | null)[];
+  wave_direction_deg: (number | null)[];
+  swell_wave_height_m: (number | null)[];
+  wind_speed_kmh: (number | null)[];
+  wind_direction_deg: (number | null)[];
+  wind_gusts_kmh: (number | null)[];
+}
+
+export interface DistrictForecast {
+  district: string;
+  latitude: number;
+  longitude: number;
+  hourly: HourlySeries | null;
+}
+
+export interface MarineForecast {
+  status: string;
+  provider: string;
+  retrieved_at: string;
+  valid_from: string | null;
+  valid_until: string | null;
+  error: string | null;
+  thresholds: { wave_height_m: number; wind_speed_kmh: number };
+  districts: DistrictForecast[];
 }
 
 export interface MapMetadata {

@@ -6,7 +6,7 @@
  */
 
 import type { HealthResponse } from '../types/health';
-import type { MapSummaryResponse } from '../types/map';
+import type { MapSummaryResponse, MarineForecast, MarineWarnings } from '../types/map';
 
 const API_BASE = '/api/v1';
 
@@ -35,4 +35,22 @@ export async function fetchMapSummary(demo: boolean = false): Promise<MapSummary
   }
 
   return response.json() as Promise<MapSummaryResponse>;
+}
+
+/**
+ * Active IMD marine warnings with issue / validity timestamps.
+ */
+export async function fetchMarineWarnings(): Promise<MarineWarnings> {
+  const response = await fetch(`${API_BASE}/marine/warnings`);
+  if (!response.ok) throw new Error(`Marine warnings failed: ${response.status}`);
+  return response.json() as Promise<MarineWarnings>;
+}
+
+/**
+ * 72 h hourly wave/wind forecast for one offshore point per coastal district.
+ */
+export async function fetchMarineForecast(): Promise<MarineForecast> {
+  const response = await fetch(`${API_BASE}/marine/forecast`);
+  if (!response.ok) throw new Error(`Marine forecast failed: ${response.status}`);
+  return response.json() as Promise<MarineForecast>;
 }
