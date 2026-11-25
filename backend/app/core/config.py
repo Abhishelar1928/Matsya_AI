@@ -31,7 +31,15 @@ class Settings(BaseSettings):
 
     # --- External APIs ---
     IMD_API_KEY: str | None = None
+    IMD_DISTRICT_API_URL: str = "https://api.imd.gov.in/api/v1/districtwarning"
     GFW_API_TOKEN: str | None = None
+    PROTECTED_PLANET_API_TOKEN: str | None = None
+
+    # --- Maharashtra Coastal Bounding Box (WGS84 / EPSG:4326) ---
+    MAHARASHTRA_MIN_LAT: float = 15.0
+    MAHARASHTRA_MAX_LAT: float = 20.6
+    MAHARASHTRA_MIN_LON: float = 71.0
+    MAHARASHTRA_MAX_LON: float = 74.2
 
     # --- CORS ---
     CORS_ORIGINS: list[str] = [

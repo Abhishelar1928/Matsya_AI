@@ -1,0 +1,332 @@
+{
+  "model_version": "Phase4_SpatioOcean_v1",
+  "run_id": "p4_20261125T213628Z_0453e792",
+  "architecture": "Two-Stage (Stage 1 Habitat Suitability + Stage 2 Operational XGBoost + Post-Hoc Calibration)",
+  "stage1_algorithm": "XGBClassifier",
+  "stage2_algorithm": "XGBClassifier",
+  "calibration_method": "platt",
+  "seasonal_calibration_method": "platt",
+  "seasonal_decision_threshold": 0.12,
+  "split_mode": "multi_year_full_test_year",
+  "train_date_range": [
+    "2020-01-15",
+    "2023-03-17"
+  ],
+  "validation_date_range": [
+    "2023-03-18",
+    "2023-12-31"
+  ],
+  "test_date_range": [
+    "2024-01-01",
+    "2024-12-30"
+  ],
+  "training_samples": 96224,
+  "dataset_total_samples": 175764,
+  "unique_cells": 97,
+  "target_threshold_hours": 1.0,
+  "decision_threshold": 0.23,
+  "target_interpretation": "next-calendar-day apparent fishing activity (>1.0 fishing hours)",
+  "stage1_features": [
+    "sst",
+    "sst_spatial_gradient",
+    "chl_a",
+    "chl_a_lag3_mean",
+    "chl_a_lag7_mean",
+    "chl_a_lag14_mean",
+    "chl_a_anomaly",
+    "depth_m",
+    "seabed_slope",
+    "sst_isna",
+    "sst_spatial_gradient_isna",
+    "chl_a_isna",
+    "chl_a_lag14_isna",
+    "depth_m_isna",
+    "wave_height",
+    "wave_period",
+    "wave_direction_sin",
+    "wave_direction_cos",
+    "swell_wave_height",
+    "ocean_current_velocity",
+    "wind_speed",
+    "wind_speed_isna",
+    "current_convergence_proxy",
+    "latitude",
+    "longitude",
+    "distance_to_coast_km",
+    "is_coastal",
+    "day_of_year",
+    "month",
+    "day_of_week",
+    "sin_day_of_year",
+    "cos_day_of_year"
+  ],
+  "stage2_features": [
+    "habitat_suitability_score",
+    "fishing_hours_recent",
+    "fishing_hours_lag_1",
+    "fishing_hours_lag_2",
+    "fishing_hours_lag_3",
+    "fishing_hours_7d_mean",
+    "fishing_hours_7d_max",
+    "fishing_hours_7d_std",
+    "fishing_hours_7d_pos_freq",
+    "fishing_hours_14d_mean",
+    "regional_fishing_hours_T",
+    "wave_height",
+    "wave_period",
+    "wave_direction_sin",
+    "wave_direction_cos",
+    "swell_wave_height",
+    "ocean_current_velocity",
+    "wind_speed",
+    "wind_speed_isna",
+    "latitude",
+    "longitude",
+    "distance_to_coast_km",
+    "is_coastal",
+    "day_of_year",
+    "month",
+    "day_of_week",
+    "sin_day_of_year",
+    "cos_day_of_year",
+    "nbr_1ring_fishing_mean",
+    "nbr_1ring_fishing_max",
+    "nbr_1ring_active_count",
+    "nbr_1ring_fishing_7d_mean",
+    "nbr_1ring_fishing_7d_max",
+    "nbr_1ring_active_7d_count",
+    "nbr_2ring_fishing_mean",
+    "current_convergence_proxy",
+    "sst",
+    "sst_spatial_gradient",
+    "chl_a",
+    "chl_a_lag3_mean",
+    "chl_a_lag7_mean",
+    "chl_a_lag14_mean",
+    "chl_a_anomaly",
+    "depth_m",
+    "seabed_slope",
+    "sst_isna",
+    "sst_spatial_gradient_isna",
+    "chl_a_isna",
+    "chl_a_lag14_isna",
+    "depth_m_isna"
+  ],
+  "validation_metrics": {
+    "pr_auc": 0.43022761854510544,
+    "roc_auc": 0.9160021493539746,
+    "precision": 0.4568835098335855,
+    "recall": 0.468944099378882,
+    "f1": 0.46283524904214557,
+    "confusion_matrix": [
+      [
+        26027,
+        718
+      ],
+      [
+        684,
+        604
+      ]
+    ],
+    "pos_count": 1288,
+    "neg_count": 26745,
+    "prevalence": 0.04594584953447722,
+    "pred_pos_count": 1322,
+    "brier_score": 0.03291822060250538,
+    "reliability": {
+      "ece": 0.004245,
+      "bins": [
+        {
+          "bin_low": 0.0,
+          "bin_high": 0.05,
+          "count": 22492,
+          "mean_predicted": 0.011286,
+          "observed_rate": 0.010181,
+          "gap": 0.001104
+        },
+        {
+          "bin_low": 0.05,
+          "bin_high": 0.15,
+          "count": 3545,
+          "mean_predicted": 0.081284,
+          "observed_rate": 0.091678,
+          "gap": -0.010394
+        },
+        {
+          "bin_low": 0.15,
+          "bin_high": 0.3,
+          "count": 993,
+          "mean_predicted": 0.210296,
+          "observed_rate": 0.214502,
+          "gap": -0.004206
+        },
+        {
+          "bin_low": 0.3,
+          "bin_high": 0.44,
+          "count": 346,
+          "mean_predicted": 0.365047,
+          "observed_rate": 0.419075,
+          "gap": -0.054028
+        },
+        {
+          "bin_low": 0.44,
+          "bin_high": 0.6,
+          "count": 319,
+          "mean_predicted": 0.522925,
+          "observed_rate": 0.479624,
+          "gap": 0.043301
+        },
+        {
+          "bin_low": 0.6,
+          "bin_high": 0.8,
+          "count": 257,
+          "mean_predicted": 0.684965,
+          "observed_rate": 0.622568,
+          "gap": 0.062397
+        },
+        {
+          "bin_low": 0.8,
+          "bin_high": 1.0,
+          "count": 81,
+          "mean_predicted": 0.834543,
+          "observed_rate": 0.777778,
+          "gap": 0.056765
+        }
+      ]
+    },
+    "precision_at_k": {
+      "p@5": 0.275433,
+      "p@10": 0.227336,
+      "p@15": 0.187543,
+      "p@20": 0.160035
+    },
+    "precision_at_k_active_days": {
+      "p@5": 0.394059,
+      "p@10": 0.325248,
+      "p@15": 0.268317,
+      "p@20": 0.22896
+    }
+  },
+  "test_metrics": {
+    "pr_auc": 0.5443876135448005,
+    "roc_auc": 0.9253683477709873,
+    "precision": 0.5071609098567817,
+    "recall": 0.5561200923787529,
+    "f1": 0.5305133289270765,
+    "confusion_matrix": [
+      [
+        32070,
+        1170
+      ],
+      [
+        961,
+        1204
+      ]
+    ],
+    "pos_count": 2165,
+    "neg_count": 33240,
+    "prevalence": 0.06114955514757803,
+    "pred_pos_count": 2374,
+    "brier_score": 0.03867831052100094,
+    "reliability": {
+      "ece": 0.006678,
+      "bins": [
+        {
+          "bin_low": 0.0,
+          "bin_high": 0.05,
+          "count": 28125,
+          "mean_predicted": 0.011545,
+          "observed_rate": 0.010631,
+          "gap": 0.000914
+        },
+        {
+          "bin_low": 0.05,
+          "bin_high": 0.15,
+          "count": 3882,
+          "mean_predicted": 0.083558,
+          "observed_rate": 0.110768,
+          "gap": -0.02721
+        },
+        {
+          "bin_low": 0.15,
+          "bin_high": 0.3,
+          "count": 1548,
+          "mean_predicted": 0.212229,
+          "observed_rate": 0.251292,
+          "gap": -0.039063
+        },
+        {
+          "bin_low": 0.3,
+          "bin_high": 0.44,
+          "count": 643,
+          "mean_predicted": 0.363328,
+          "observed_rate": 0.398134,
+          "gap": -0.034806
+        },
+        {
+          "bin_low": 0.44,
+          "bin_high": 0.6,
+          "count": 533,
+          "mean_predicted": 0.519276,
+          "observed_rate": 0.534709,
+          "gap": -0.015433
+        },
+        {
+          "bin_low": 0.6,
+          "bin_high": 0.8,
+          "count": 477,
+          "mean_predicted": 0.683128,
+          "observed_rate": 0.691824,
+          "gap": -0.008696
+        },
+        {
+          "bin_low": 0.8,
+          "bin_high": 1.0,
+          "count": 197,
+          "mean_predicted": 0.843327,
+          "observed_rate": 0.893401,
+          "gap": -0.050074
+        }
+      ]
+    },
+    "precision_at_k": {
+      "p@5": 0.382466,
+      "p@10": 0.306575,
+      "p@15": 0.258082,
+      "p@20": 0.223699
+    },
+    "precision_at_k_active_days": {
+      "p@5": 0.500358,
+      "p@10": 0.401075,
+      "p@15": 0.337634,
+      "p@20": 0.292652
+    }
+  },
+  "ocean_coverage": {
+    "sst": 0.9247,
+    "sst_spatial_gradient": 0.9247,
+    "chl_a": 0.1053,
+    "chl_a_lag14_mean": 0.8708,
+    "depth_m": 1.0,
+    "seabed_slope": 1.0,
+    "current_convergence_proxy": 0.5897
+  },
+  "persistence_shift_analysis": {
+    "phase3_baseline": {
+      "self_ais_persistence_share": 0.9526,
+      "spatial_neighbor_ais_share": 0.0,
+      "stage1_habitat_score_share": 0.0,
+      "direct_ocean_bathymetry_share": 0.0,
+      "non_ais_signal_share": 0.0474
+    },
+    "phase4_stage2": {
+      "self_ais_persistence_share": 0.7886,
+      "spatial_neighbor_ais_share": 0.0902,
+      "stage1_habitat_score_share": 0.013,
+      "direct_ocean_bathymetry_share": 0.0649,
+      "non_ais_signal_share": 0.1212
+    }
+  },
+  "serialization_timestamp": "2026-11-25T21:36:28.515323+00:00",
+  "disclaimer": "Predicts next-calendar-day apparent fishing activity (>1.0 fishing hours) derived from historical GFW AIS patterns combined with physical/biological oceanographic habitat cues. Does NOT predict fish presence, biomass, species abundance, or guaranteed catch. Safety status is determined independently by SafetyGate."
+}

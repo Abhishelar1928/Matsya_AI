@@ -23,6 +23,10 @@ export interface CellPrediction {
   current_wind_speed_kmh: number | null;
   safety_status: SafetyStatus;
   safety_override: boolean;
+  habitat_suitability_score?: number | null;
+  calibration_method?: string | null;
+  prediction_mode?: string | null;
+  seasonal_anchor_date?: string | null;
 }
 
 export interface PFZLocation {
@@ -87,6 +91,12 @@ export interface HourlySeries {
   wave_period_s: (number | null)[];
   wave_direction_deg: (number | null)[];
   swell_wave_height_m: (number | null)[];
+  swell_wave_period_s?: (number | null)[];
+  ocean_current_velocity_mps?: (number | null)[];
+  ocean_current_direction_deg?: (number | null)[];
+  ocean_current_u_mps?: (number | null)[];
+  ocean_current_v_mps?: (number | null)[];
+  sea_surface_temperature_c?: (number | null)[];
   wind_speed_kmh: (number | null)[];
   wind_direction_deg: (number | null)[];
   wind_gusts_kmh: (number | null)[];
@@ -113,6 +123,10 @@ export interface MarineForecast {
 export interface MapMetadata {
   application: string;
   model_version: string;
+  calibration_method?: string | null;
+  decision_threshold?: number | null;
+  prediction_mode?: string | null;
+  seasonal_anchor_date?: string | null;
   prediction_timestamp: string;
   target_interpretation: string;
   data_freshness_status: string;
@@ -140,6 +154,8 @@ export interface GFWContextSource {
   status: string;
   observation_date: string | null;
   age_days: number | null;
+  context_mode?: string | null;
+  seasonal_anchor_date?: string | null;
 }
 
 export interface EnvironmentalSource {
@@ -185,4 +201,59 @@ export interface MapSummaryResponse {
   landing_centres: LandingCentre[];
   source_freshness?: SourceFreshness;
   prediction_provenance?: PredictionProvenance;
+}
+
+export interface OceanLayerEntry {
+  status: string;
+  source?: string;
+  timestamp?: string;
+  observation_timestamp?: string;
+  acquisition_date?: string;
+  units?: string;
+  resolution?: string;
+  spatial_resolution?: string;
+  spatial_resolution_deg?: number;
+  feature_count?: number;
+  valid_pixel_count?: number;
+  bbox?: { min_lat: number; max_lat: number; min_lon: number; max_lon: number };
+  observed_range?: { min?: number; max?: number; min_c?: number; max_c?: number } | null;
+  levels_m?: number[];
+  url?: string;
+  png_url?: string;
+  disclaimer?: string;
+}
+
+export interface OceanLayersManifest {
+  status?: string;
+  generated_at: string | null;
+  crs?: string;
+  region?: string;
+  bbox?: { min_lat: number; max_lat: number; min_lon: number; max_lon: number };
+  layers: Record<string, OceanLayerEntry>;
+}
+
+export interface DistrictAlertItem {
+  identifier: string;
+  districts: string[];
+  disaster_type: string;
+  severity: string;
+  severity_color?: string | null;
+  source: string;
+  area_description: string;
+  warning_message: string;
+  effective_start_time: string | null;
+  effective_end_time: string | null;
+}
+
+export interface DistrictWarningsResponse {
+  status: string;
+  retrieved_at: string;
+  districts_monitored: string[];
+  sources: {
+    ndma_sachet_cap?: { status: string; error?: string | null; alert_count?: number };
+    imd_mumbai_fisherman_pdf?: { status: string; last_modified?: string | null; url?: string };
+    imd_public_api?: { status: string; reference?: string; note?: string };
+  };
+  alerts: DistrictAlertItem[];
+  imd_api_items?: unknown[];
 }

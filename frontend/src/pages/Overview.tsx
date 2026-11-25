@@ -22,7 +22,7 @@ export function Overview() {
 }
 
 function OverviewContent() {
-  const { summary, forecast } = useData();
+  const { summary, forecast, oceanLayers } = useData();
   const { mr, tr } = useLang();
   const data = summary!;
 
@@ -81,7 +81,7 @@ function OverviewContent() {
           className="card-fill"
           flush
         >
-          <MarineMap data={data} mr={mr} height="auto" flush layersCollapsed />
+          <MarineMap data={data} oceanLayers={oceanLayers} mr={mr} height="auto" flush layersCollapsed />
         </Card>
 
         <div className="stack">

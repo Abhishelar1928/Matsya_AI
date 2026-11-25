@@ -1,4 +1,4 @@
-/** Districts — Palghar, Mumbai, Raigad, Ratnagiri, Sindhudurg at a glance. */
+/** Districts — Palghar, Thane, Mumbai, Raigad, Ratnagiri, Sindhudurg at a glance. */
 
 import { useMemo } from 'react';
 import { Anchor, CloudSun, Map as MapIcon } from 'lucide-react';
@@ -35,7 +35,7 @@ function Content() {
     <div className="stack">
       <PageHeader
         title={tr('Coastal districts', 'किनारी जिल्हे')}
-        description={tr('Five districts, north to south. Zones and grid cells are attributed to the nearest landing centre.', 'उत्तरेकडून दक्षिणेकडे पाच जिल्हे. क्षेत्रे व ग्रिड जवळच्या लँडिंग केंद्राच्या जिल्ह्याला जोडली आहेत.')}
+        description={tr('Six coastal districts, north to south. Zones and grid cells are attributed to the nearest landing centre.', 'उत्तरेकडून दक्षिणेकडे सहा किनारी जिल्हे. क्षेत्रे व ग्रिड जवळच्या लँडिंग केंद्राच्या जिल्ह्याला जोडली आहेत.')}
       />
       <div className="grid-3">
         {rows.map((r) => {

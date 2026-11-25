@@ -106,6 +106,21 @@ async def get_map_summary(
 
     # Construct Prediction Provenance from tracked sources and latest DB batch timestamp
     pred_ts = predictions[0].get("prediction_timestamp") if predictions else None
+    active_model_version = (
+        predictions[0].get("model_version")
+        if predictions
+        else (pipeline._metadata or {}).get("model_version", "Phase4_SpatioOcean_v1")
+    )
+    active_calibration = (
+        predictions[0].get("calibration_method")
+        if predictions
+        else (pipeline._metadata or {}).get("calibration_method")
+    )
+    active_threshold = (
+        predictions[0].get("decision_threshold")
+        if predictions
+        else (pipeline._threshold_info or {}).get("decision_threshold")
+    )
     
     prediction_provenance = {
         "overall_data_status": freshness,
@@ -141,7 +156,9 @@ async def get_map_summary(
     return {
         "metadata": {
             "application": "MatsyaAI Maharashtra",
-            "model_version": "Phase3_XGBoost_v1",
+            "model_version": active_model_version,
+            "calibration_method": active_calibration,
+            "decision_threshold": active_threshold,
             "prediction_timestamp": pred_ts or datetime.now(timezone.utc).isoformat(),
             "target_interpretation": "next-calendar-day apparent fishing activity (>1.0 fishing hours)",
             "data_freshness_status": freshness,

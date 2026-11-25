@@ -3,14 +3,15 @@
  * district of the nearest canonical landing centre.
  */
 
-import { haversineKm } from '../expedition/geo';
+import { haversineKm } from '../expedition/engine/geodesy';
 import type { LandingCentre } from '../types/map';
 
-export const DISTRICTS = ['Palghar', 'Mumbai', 'Raigad', 'Ratnagiri', 'Sindhudurg'] as const;
+export const DISTRICTS = ['Palghar', 'Thane', 'Mumbai', 'Raigad', 'Ratnagiri', 'Sindhudurg'] as const;
 export type District = (typeof DISTRICTS)[number];
 
 export const DISTRICT_MR: Record<District, string> = {
   Palghar: 'पालघर',
+  Thane: 'ठाणे',
   Mumbai: 'मुंबई',
   Raigad: 'रायगड',
   Ratnagiri: 'रत्नागिरी',

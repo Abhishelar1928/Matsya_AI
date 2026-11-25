@@ -610,3 +610,75 @@ class IMDMarineProvider(BaseProvider):
             result["count"] = 0
 
         return result
+
+
+async def fetch_district_warnings_live(districts: List[str]) -> Dict[str, Any]:
+    """Fetch live district-level weather warnings from NDMA SACHET CAP and optionally api.imd.gov.in."""
+    from backend.app.core.config import settings
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    alerts: List[Dict[str, Any]] = []
+    sachet_status = "UNAVAILABLE"
+    sachet_error: Optional[str] = None
+    pat = re.compile(r"\b(" + "|".join(re.escape(d) for d in districts) + r"|konkan|maharashtra)\b", re.IGNORECASE)
+
+    try:
+        async with httpx.AsyncClient(timeout=15.0, headers={"User-Agent": "MatsyaAI/1.0"}) as client:
+            r = await client.get("https://sachet.ndma.gov.in/cap_public_website/FetchAllAlertDetails")
+            r.raise_for_status()
+            rows = r.json()
+            sachet_status = "LIVE"
+            for a in (rows if isinstance(rows, list) else []):
+                area = f"{a.get('area_description', '')} {a.get('area_covered', '')} {a.get('warning_message', '')}"
+                if not pat.search(area):
+                    continue
+                matched = [d for d in districts if re.search(rf"\b{re.escape(d)}\b", area, re.IGNORECASE)]
+                alerts.append({
+                    "identifier": str(a.get("identifier") or a.get("alert_id_sdma_autoinc") or ""),
+                    "districts": matched or ["Maharashtra Coast"],
+                    "disaster_type": a.get("disaster_type") or "Weather Alert",
+                    "severity": a.get("severity") or "INFO",
+                    "severity_color": a.get("severity_color"),
+                    "source": a.get("alert_source") or "NDMA SACHET / IMD",
+                    "area_description": a.get("area_description") or a.get("area_covered") or "",
+                    "warning_message": a.get("warning_message") or "",
+                    "effective_start_time": a.get("effective_start_time"),
+                    "effective_end_time": a.get("effective_end_time"),
+                })
+    except Exception as e:
+        sachet_error = str(e)
+
+    imd_api_status = "AUTH_IP_WHITELIST_REQUIRED"
+    imd_api_items: List[Dict[str, Any]] = []
+    if settings.IMD_API_KEY:
+        try:
+            async with httpx.AsyncClient(timeout=15.0, headers={
+                "User-Agent": "MatsyaAI/1.0",
+                "Authorization": f"Bearer {settings.IMD_API_KEY}",
+                "x-api-key": settings.IMD_API_KEY,
+            }) as client:
+                r = await client.get(settings.IMD_DISTRICT_API_URL)
+                if r.status_code == 200:
+                    imd_api_status = "LIVE"
+                    data = r.json()
+                    imd_api_items = data if isinstance(data, list) else data.get("data", [])
+                else:
+                    imd_api_status = f"HTTP_{r.status_code}"
+        except Exception as e:
+            imd_api_status = f"ERROR: {e}"
+
+    return {
+        "status": "LIVE" if (sachet_status == "LIVE" or imd_api_status == "LIVE") else "UNAVAILABLE",
+        "retrieved_at": now_iso,
+        "districts_monitored": districts,
+        "sources": {
+            "ndma_sachet_cap": {"status": sachet_status, "error": sachet_error, "alert_count": len(alerts)},
+            "imd_public_api": {
+                "status": imd_api_status,
+                "reference": "https://api.imd.gov.in/public/api_reference.html",
+                "note": "api.imd.gov.in requires static public IP whitelisting and IMD API credentials.",
+            },
+        },
+        "alerts": alerts,
+        "imd_api_items": imd_api_items,
+    }

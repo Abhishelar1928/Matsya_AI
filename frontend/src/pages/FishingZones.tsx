@@ -147,7 +147,13 @@ function PredictionsTab() {
   const data = summary!;
   const [district, setDistrict] = useState<string>('all');
   const preds = data.predictions;
-  const threshold = preds[0]?.decision_threshold ?? null;
+  const threshold = preds[0]?.decision_threshold ?? data.metadata.decision_threshold ?? null;
+  const calMethod = preds[0]?.calibration_method ?? data.metadata.calibration_method ?? null;
+  const calLabel = calMethod ? `${calMethod[0].toUpperCase()}${calMethod.slice(1).replace('_', ' ')}` : null;
+  const pMode = preds[0]?.prediction_mode ?? data.metadata.prediction_mode ?? 'daily_operational';
+  const isSeasonal = pMode === 'seasonal_climatology';
+  const anchorDate = preds[0]?.seasonal_anchor_date ?? data.metadata.seasonal_anchor_date ?? null;
+  const hasHabitat = preds.some((r) => r.habitat_suitability_score != null);
 
   const rows = useMemo(() => preds.map((p) => ({
     ...p, district: districtOf(data.landing_centres, p.latitude, p.longitude) ?? '—',
@@ -167,8 +173,19 @@ function PredictionsTab() {
       <div className="grid-kpi">
         <Metric label={tr('Grid cells', 'ग्रिड क्षेत्रे')} icon={Grid3x3} value={rows.length} sub={tr('0.25° marine grid', '0.25° सागरी ग्रिड')} />
         <Metric label={tr('High activity', 'जास्त हालचाल')} icon={Fish} value={high} unit={`/ ${rows.length}`} sub={tr('Above the decision threshold', 'निर्णय मर्यादेपेक्षा अधिक')} />
-        <Metric label={tr('Decision threshold', 'निर्णय मर्यादा')} icon={Gauge} value={threshold != null ? fmtPct(threshold) : '—'} sub={tr('Validated on 2023 hold-out data', '2023 चाचणी डेटावर प्रमाणित')} />
-        <Metric label={tr('Prediction for', 'अंदाज')} value={<span style={{ fontSize: 20 }}>{fmtDateTime(data.metadata.prediction_timestamp)}</span>} sub={data.metadata.model_version} />
+        <Metric
+          label={tr('Decision threshold', 'निर्णय मर्यादा')}
+          icon={Gauge}
+          value={threshold != null ? fmtPct(threshold) : '—'}
+          sub={calLabel
+            ? tr(`Validated · ${calLabel} calibrated`, `प्रमाणित · ${calLabel} कॅलिब्रेटेड`)
+            : tr('Validated on 2023 hold-out data', '2023 चाचणी डेटावर प्रमाणित')}
+        />
+        <Metric
+          label={isSeasonal ? tr('Seasonal basis', 'हंगामी आधार') : tr('Prediction for', 'अंदाज')}
+          value={<span style={{ fontSize: 20 }}>{isSeasonal && anchorDate ? anchorDate : fmtDateTime(data.metadata.prediction_timestamp)}</span>}
+          sub={isSeasonal ? tr(`${data.metadata.model_version} · 2020–2024 climatology`, `${data.metadata.model_version} · २०२०–२०२४ संदर्भ`) : data.metadata.model_version}
+        />
       </div>
 
       <div className="grid-2">
@@ -189,10 +206,10 @@ function PredictionsTab() {
         </Card>
         <Card title={tr('How to read this', 'हे कसे वाचावे')}>
           <ul style={{ margin: 0, paddingLeft: 18, display: 'grid', gap: 8, color: 'var(--text-secondary)', fontSize: 13 }}>
-            <li>{tr('Each 0.25° cell (~27 km) gets a probability that vessels will show fishing behaviour there tomorrow.', 'प्रत्येक 0.25° क्षेत्राला (~27 किमी) उद्या तेथे मासेमारी हालचाल होण्याची संभाव्यता दिली जाते.')}</li>
-            <li>{tr('Cells above the validated threshold are marked high. The model learned from 2023 Global Fishing Watch data.', 'प्रमाणित मर्यादेपेक्षा जास्त क्षेत्रे "जास्त" म्हणून दाखवली जातात. मॉडेल 2023 च्या Global Fishing Watch डेटावर शिकले आहे.')}</li>
-            <li>{tr('It reflects where boats usually fish — not where fish are, and never whether the sea is safe.', 'हे नौका सहसा कुठे मासेमारी करतात ते दाखवते — मासे कुठे आहेत ते नाही, आणि समुद्र सुरक्षित आहे की नाही ते कधीच नाही.')}</li>
-            <li>{tr('Use official INCOIS PFZ advisories as the primary guide.', 'प्राथमिक मार्गदर्शनासाठी अधिकृत INCOIS PFZ सल्ले वापरा.')}</li>
+            <li>{tr('GFW pattern (blue grid): shows where AIS-equipped commercial vessels historically operated in this seasonal window (2020–2024 climatology when live AIS is absent).', 'GFW पॅटर्न (निळा ग्रिड): या हंगामात AIS-सज्ज नौका ऐतिहासिकदृष्ट्या कुठे कार्यरत होत्या ते दाखवतो.')}</li>
+            <li>{tr('Ocean habitat score (Stage 1): scores environmental favourability from SST fronts, ESA CCI Chlorophyll-a, and 30 arc-sec bathymetry with zero vessel history.', 'सागरी अधिवास गुण (टप्पा १): नौका इतिहासाशिवाय SST, क्लोरोफिल-अ आणि खोलीवरून पर्यावरणीय अनुकूलता मोजतो.')}</li>
+            <li>{tr('INCOIS PFZ advisories (green pins): live satellite-derived coastal potential fishing zones that also cover small nearshore artisanal boats missed by AIS.', 'INCOIS PFZ सल्ला (हिरवे पिन): AIS मध्ये न दिसणाऱ्या लहान किनारी नौकांसाठी उपयुक्त अधिकृत थेट उपग्रह सल्ला.')}</li>
+            <li>{tr('Marine SafetyGate (badges): always evaluated independently from IMD warnings and wave/wind thresholds — never inferred from fishing scores.', 'सागरी सुरक्षा (SafetyGate): हवामान आणि लाटांच्या मर्यादेवर आधारित स्वतंत्र तपासणी — मासेमारी गुणांपासून पूर्णपणे वेगळी.')}</li>
           </ul>
         </Card>
       </div>
@@ -215,7 +232,8 @@ function PredictionsTab() {
               <tr>
                 <th>{tr('Location', 'स्थान')}</th>
                 <th>{tr('District', 'जिल्हा')}</th>
-                <th style={{ width: '30%' }}>{tr('Predicted activity', 'अपेक्षित हालचाल')}</th>
+                <th style={{ width: '28%' }}>{tr('Predicted activity', 'अपेक्षित हालचाल')}</th>
+                {hasHabitat && <th className="right">{tr('Habitat', 'अधिवास')}</th>}
                 <th>{tr('Class', 'वर्ग')}</th>
                 <th className="right">{tr('From nearest centre', 'जवळच्या केंद्रापासून')}</th>
                 <th className="right"><span className="sr-only">{tr('Actions', 'कृती')}</span></th>
@@ -232,6 +250,11 @@ function PredictionsTab() {
                       <span className="num fw-500" style={{ color: 'var(--text)', width: 40, textAlign: 'right' }}>{fmtPct(r.predicted_apparent_fishing_probability)}</span>
                     </div>
                   </td>
+                  {hasHabitat && (
+                    <td className="right num">
+                      {r.habitat_suitability_score != null ? fmtPct(r.habitat_suitability_score) : '—'}
+                    </td>
+                  )}
                   <td>{r.predicted_apparent_fishing_binary === 1 ? <Badge tone="info">{tr('High', 'जास्त')}</Badge> : <span className="text-muted">{tr('Low', 'कमी')}</span>}</td>
                   <td className="right num">{r.distance_to_coast_km.toFixed(0)} km</td>
                   <td className="right"><a className="btn btn-ghost btn-sm" href={href('map', { lat: r.latitude, lon: r.longitude })}>{tr('Map', 'नकाशा')}</a></td>

@@ -9,7 +9,7 @@ makes sync idempotent: re-sending the same record never creates a duplicate.
 from datetime import datetime, timezone
 
 from geoalchemy2 import Geometry
-from sqlalchemy import DateTime, Float, ForeignKey, String, Text
+from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from backend.app.core.database import Base
@@ -48,6 +48,9 @@ class ExpeditionTrackPoint(Base):
     geom: Mapped[str] = mapped_column(Geometry("POINT", srid=4326), nullable=False)
     speed_mps: Mapped[float | None] = mapped_column(Float, nullable=True)
     heading_deg: Mapped[float | None] = mapped_column(Float, nullable=True)
+    cog_deg: Mapped[float | None] = mapped_column(Float, nullable=True)
+    compass_heading_deg: Mapped[float | None] = mapped_column(Float, nullable=True)
+    xte_km: Mapped[float | None] = mapped_column(Float, nullable=True)
     accuracy_m: Mapped[float | None] = mapped_column(Float, nullable=True)
     synced_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
 
@@ -63,7 +66,11 @@ class CatchRecord(Base):
     longitude: Mapped[float | None] = mapped_column(Float, nullable=True)
     geom: Mapped[str | None] = mapped_column(Geometry("POINT", srid=4326), nullable=True)
     species: Mapped[str] = mapped_column(String(100), nullable=False)
+    species_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     weight_kg: Mapped[float | None] = mapped_column(Float, nullable=True)
+    quantity: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    fishing_duration_min: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    estimated_value_inr: Mapped[float | None] = mapped_column(Float, nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     synced_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
 

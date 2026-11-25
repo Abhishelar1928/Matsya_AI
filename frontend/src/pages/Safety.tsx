@@ -26,7 +26,7 @@ export function Safety() {
 }
 
 function Content() {
-  const { summary, warnings, forecast } = useData();
+  const { summary, warnings, forecast, districtWarnings } = useData();
   const { mr, tr } = useLang();
   const data = summary!;
   const status = data.marine_safety.overall_status;
@@ -174,6 +174,40 @@ function Content() {
             `पट्ट्या सावधानता मर्यादेकडे भरतात (${thresholds.wave_height_m} मी लाटा, ${thresholds.wind_speed_kmh} किमी/तास वारा). मर्यादेत असणे म्हणजे सुरक्षित नव्हे — अधिकृत चेतावण्या प्राधान्य घेतात.`,
           )}
         </div>
+      </Card>
+
+      <Card title={tr('District weather warnings (IMD / NDMA SACHET)', 'जिल्हा हवामान चेतावण्या (IMD / NDMA SACHET)')}
+        subtitle={districtWarnings ? `${tr('6 coastal districts monitored', '6 किनारी जिल्हे')} · ${fmtDateTime(districtWarnings.retrieved_at)}` : undefined}
+        flush>
+        {!districtWarnings || districtWarnings.alerts.length === 0 ? (
+          <div style={{ padding: 16 }}>
+            <div className="text-sm text-secondary">
+              {districtWarnings?.sources?.ndma_sachet_cap?.status === 'LIVE'
+                ? tr('No active coastal district CAP alerts for Palghar, Thane, Mumbai, Raigad, Ratnagiri, or Sindhudurg.', 'पालघर, ठाणे, मुंबई, रायगड, रत्नागिरी किंवा सिंधुदुर्गसाठी सध्या कोणतीही सक्रिय CAP चेतावणी नाही.')
+                : tr('District alert feed unavailable.', 'जिल्हा चेतावणी फीड उपलब्ध नाही.')}
+            </div>
+            {districtWarnings?.sources?.imd_public_api?.status && districtWarnings.sources.imd_public_api.status !== 'LIVE' && (
+              <div className="text-xs text-muted" style={{ marginTop: 6 }}>
+                IMD API ({districtWarnings.sources.imd_public_api.status}): {districtWarnings.sources.imd_public_api.note}
+              </div>
+            )}
+          </div>
+        ) : (
+          <ul className="list">
+            {districtWarnings.alerts.map((a) => (
+              <li key={a.identifier || a.area_description} className="list-row" style={{ alignItems: 'flex-start' }}>
+                <div className="list-row-main">
+                  <div className="fw-500">{a.districts.join(', ')} — {a.disaster_type}</div>
+                  <div className="text-sm text-secondary" style={{ marginTop: 2 }}>{a.warning_message || a.area_description}</div>
+                  <div className="list-row-sub num" style={{ marginTop: 4 }}>
+                    {a.source} · {a.effective_start_time ?? ''} – {a.effective_end_time ?? ''}
+                  </div>
+                </div>
+                <Badge tone={severityTone(a.severity)}>{humanize(a.severity)}</Badge>
+              </li>
+            ))}
+          </ul>
+        )}
       </Card>
 
       <Card title={tr('Safety status across the grid', 'ग्रिडवरील सुरक्षा स्थिती')} subtitle={`${data.predictions.length} ${tr('grid cells', 'ग्रिड क्षेत्रे')}`}>

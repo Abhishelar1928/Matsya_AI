@@ -1,0 +1,9 @@
+{
+  "run_id": "p4_20261125T213628Z_0453e792",
+  "target_threshold_hours": 1.0,
+  "decision_threshold": 0.23,
+  "calibration_method": "platt",
+  "seasonal_decision_threshold": 0.12,
+  "seasonal_calibration_method": "platt",
+  "target_interpretation": "next-calendar-day apparent fishing activity (>1.0 fishing hours)"
+}

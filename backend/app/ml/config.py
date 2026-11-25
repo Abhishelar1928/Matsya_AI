@@ -20,16 +20,32 @@ ARTIFACTS_DIR.mkdir(exist_ok=True)
 
 # Cache files
 HISTORICAL_CACHE_PATH = DATA_DIR / "historical_full_year_2023.parquet"
+MULTIYEAR_HISTORICAL_CACHE_PATH = DATA_DIR / "historical_multiyear_2020_2024.parquet"
 GFW_RAW_CACHE_DIR = DATA_DIR / "gfw_raw"
 ENV_RAW_CACHE_DIR = DATA_DIR / "env_raw"
+OCEAN_CACHE_DIR = DATA_DIR / "ocean_cache"
 
-# Model artifacts (Phase 3 Validated XGBoost Artifacts)
+# Model artifacts (Phase 3 Validated XGBoost Artifacts — retained for fallback)
 MODEL_PATH = ARTIFACTS_DIR / "phase3_xgboost_model.joblib"
 IMPUTER_PATH = ARTIFACTS_DIR / "phase3_imputer.joblib"
 SCALER_PATH = ARTIFACTS_DIR / "phase3_scaler.joblib"
 THRESHOLD_PATH = ARTIFACTS_DIR / "phase3_threshold.json"
 FEATURE_COLUMNS_PATH = ARTIFACTS_DIR / "phase3_feature_columns.json"
 METADATA_PATH = ARTIFACTS_DIR / "phase3_metadata.json"
+
+# Model artifacts (Phase 4 Spatio-Oceanographic Two-Stage Pipeline)
+PHASE4_STAGE1_MODEL_PATH = ARTIFACTS_DIR / "phase4_stage1_habitat_model.joblib"
+PHASE4_STAGE1_IMPUTER_PATH = ARTIFACTS_DIR / "phase4_stage1_imputer.joblib"
+PHASE4_STAGE1_SCALER_PATH = ARTIFACTS_DIR / "phase4_stage1_scaler.joblib"
+PHASE4_STAGE2_MODEL_PATH = ARTIFACTS_DIR / "phase4_stage2_model.joblib"
+PHASE4_STAGE2_IMPUTER_PATH = ARTIFACTS_DIR / "phase4_stage2_imputer.joblib"
+PHASE4_STAGE2_SCALER_PATH = ARTIFACTS_DIR / "phase4_stage2_scaler.joblib"
+PHASE4_CALIBRATOR_PATH = ARTIFACTS_DIR / "phase4_calibrator.joblib"
+PHASE4_SEASONAL_CALIBRATOR_PATH = ARTIFACTS_DIR / "phase4_seasonal_calibrator.joblib"
+PHASE4_FEATURES_PATH = ARTIFACTS_DIR / "phase4_feature_columns.json"
+PHASE4_THRESHOLD_PATH = ARTIFACTS_DIR / "phase4_threshold.json"
+PHASE4_METADATA_PATH = ARTIFACTS_DIR / "phase4_metadata.json"
+PHASE4_RESULTS_PATH = ARTIFACTS_DIR / "phase4_results.json"
 
 # ---------------------------------------------------------------------------
 # Spatial Grid Configuration

@@ -13,7 +13,7 @@ import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel, Field, model_validator
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -49,9 +49,16 @@ class Point(BaseModel):
     name: Optional[str] = Field(None, max_length=100)
 
 
+class OriginPoint(BaseModel):
+    latitude: float = Field(..., ge=14.0, le=22.5)
+    longitude: float = Field(..., ge=68.0, le=78.0)
+    name: Optional[str] = Field(None, max_length=100)
+
+
 class PackageRequest(BaseModel):
     device_id: str = Field(..., min_length=8, max_length=64)
     landing_centre_id: str
+    origin: Optional[OriginPoint] = None
     destination: Optional[Point] = None
     pfz_index: Optional[int] = Field(None, ge=0)
     planned_departure: Optional[datetime] = None
@@ -71,6 +78,9 @@ class TrackPointIn(BaseModel):
     longitude: float = Field(..., ge=-180, le=180)
     speed_mps: Optional[float] = None
     heading_deg: Optional[float] = None
+    cog_deg: Optional[float] = None
+    compass_heading_deg: Optional[float] = None
+    xte_km: Optional[float] = None
     accuracy_m: Optional[float] = None
 
 
@@ -80,7 +90,11 @@ class CatchIn(BaseModel):
     latitude: Optional[float] = Field(None, ge=-90, le=90)
     longitude: Optional[float] = Field(None, ge=-180, le=180)
     species: str = Field(..., min_length=1, max_length=100)
+    species_id: Optional[str] = Field(None, max_length=64)
     weight_kg: Optional[float] = Field(None, ge=0, le=100000)
+    quantity: Optional[int] = Field(None, ge=0, le=1000000)
+    fishing_duration_min: Optional[int] = Field(None, ge=0, le=10000)
+    estimated_value_inr: Optional[float] = Field(None, ge=0, le=100000000)
     notes: Optional[str] = Field(None, max_length=2000)
 
 
@@ -97,6 +111,7 @@ class ObservationIn(BaseModel):
 class SyncRequest(BaseModel):
     device_id: str = Field(..., min_length=8, max_length=64)
     expedition_id: str = Field(..., min_length=8, max_length=36)
+    batch_id: Optional[str] = Field(None, max_length=64)
     track_points: List[TrackPointIn] = Field(default_factory=list, max_length=20000)
     catches: List[CatchIn] = Field(default_factory=list, max_length=2000)
     observations: List[ObservationIn] = Field(default_factory=list, max_length=2000)
@@ -122,6 +137,7 @@ async def create_package(req: PackageRequest, db: AsyncSession = Depends(get_db)
             db=db,
             device_id=req.device_id,
             landing_centre=centre,
+            origin=req.origin.model_dump() if req.origin else None,
             destination=req.destination.model_dump() if req.destination else None,
             pfz_index=req.pfz_index,
             planned_departure=req.planned_departure,
@@ -154,7 +170,11 @@ async def create_package(req: PackageRequest, db: AsyncSession = Depends(get_db)
 
 
 @router.post("/sync")
-async def sync_expedition(req: SyncRequest, db: AsyncSession = Depends(get_db)) -> Dict[str, Any]:
+async def sync_expedition(
+    req: SyncRequest,
+    x_idempotency_key: Optional[str] = Header(None, alias="X-Idempotency-Key"),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
     expedition = await db.get(Expedition, req.expedition_id)
     if expedition is None or expedition.device_id != req.device_id:
         raise HTTPException(status_code=404, detail="Expedition not found for this device")
@@ -166,6 +186,8 @@ async def sync_expedition(req: SyncRequest, db: AsyncSession = Depends(get_db)) 
         [c.model_dump() for c in req.catches],
         [o.model_dump() for o in req.observations],
     )
+    if req.batch_id or x_idempotency_key:
+        result["batch_id"] = req.batch_id or x_idempotency_key
 
     if req.include_delta:
         centre = get_landing_centre(expedition.landing_centre_id)

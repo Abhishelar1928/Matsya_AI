@@ -1,11 +1,11 @@
 /** Weather — 72 h offshore wave & wind forecast per district, plus source freshness. */
 
 import { useMemo, useState } from 'react';
-import { ArrowUp, CloudOff, Gauge, Table2, Timer, Waves, Wind } from 'lucide-react';
+import { ArrowUp, CloudOff, Compass, Gauge, Table2, Thermometer, Timer, Waves, Wind } from 'lucide-react';
 import { Button, Card, Empty, Metric, PageHeader, Segmented } from '../components/ui';
 import { ChartLegend, TimeSeriesChart } from '../components/charts';
 import { FreshnessHUD } from '../components/FreshnessHUD';
-import { compassPoint } from '../expedition/geo';
+import { compassPoint, estimateCurrentDrift } from '../expedition/engine/geodesy';
 import { conditionsAt, peakAhead, useData } from '../lib/data';
 import { DISTRICTS, districtLabel, type District } from '../lib/districts';
 import { fmtDateTime, fmtNum } from '../lib/format';
@@ -66,7 +66,7 @@ function Content({ loc }: { loc: Location }) {
             <Metric label={tr('Wave height', 'लाटांची उंची')} icon={Waves} value={fmtNum(now?.wave)} unit="m"
               sub={`${tr('24 h peak', '24 तास कमाल')} ${fmtNum(peaks?.wave)} m · ${tr('limit', 'मर्यादा')} ${thresholds.wave_height_m} m`} />
             <Metric label={tr('Wave period', 'लाट कालावधी')} icon={Timer} value={fmtNum(now?.period)} unit="s"
-              sub={`${tr('Swell', 'स्वेल')} ${fmtNum(now?.swell)} m`} />
+              sub={`${tr('Swell', 'स्वेल')} ${fmtNum(now?.swell)} m${now?.swellPeriod != null ? ` (${fmtNum(now.swellPeriod)} s)` : ''}`} />
             <Metric label={tr('Wind speed', 'वाऱ्याचा वेग')} icon={Wind} value={fmtNum(now?.wind, 0)} unit="km/h"
               sub={`${tr('24 h peak', '24 तास कमाल')} ${fmtNum(peaks?.wind, 0)} km/h · ${tr('limit', 'मर्यादा')} ${thresholds.wind_speed_kmh}`} />
             <Metric label={tr('Gusts & direction', 'झोत व दिशा')} icon={Gauge} value={fmtNum(now?.gust, 0)} unit="km/h"
@@ -76,6 +76,16 @@ function Content({ loc }: { loc: Location }) {
                   {tr('From', 'कडून')} {compassPoint(now.windDir)} ({Math.round(now.windDir)}°)
                 </span>
               ) : '—'} />
+            <Metric label={tr('Sea surface temp', 'समुद्र तापमान')} icon={Thermometer} value={fmtNum(now?.sst)} unit="°C"
+              sub={tr('Offshore model grid (~8 km)', 'ऑफशोर मॉडेल ग्रिड (~8 किमी)')} />
+            {(() => {
+              const drift = estimateCurrentDrift(now?.currentU, now?.currentV, 1);
+              return (
+                <Metric label={tr('Surface current / drift', 'समुद्री प्रवाह / ड्रिफ्ट')} icon={Compass}
+                  value={drift ? fmtNum(drift.speedKnots, 2) : '—'} unit={drift ? 'kn' : ''}
+                  sub={drift ? `${drift.compass} (${Math.round(drift.bearingDeg)}°) · ~${drift.distanceKm.toFixed(1)} km/h drift` : tr('Unavailable', 'उपलब्ध नाही')} />
+              );
+            })()}
           </div>
 
           <div className="grid-2">

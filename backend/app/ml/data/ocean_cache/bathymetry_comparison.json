@@ -1,0 +1,25 @@
+{
+  "tif_dimensions": [
+    43200,
+    21600
+  ],
+  "tif_resolution_deg": 0.008333,
+  "tif_resolution_arcsec": 30.0,
+  "tif_predictor": 1,
+  "deep_sample_16.5N_72.0E_raw": -114.0,
+  "old_source": "GEBCO_2020_ERDDAP",
+  "old_resolution_deg": 0.05,
+  "new_source": "GFW_GEBCO_30arcsec_bathymetry.tif",
+  "new_resolution_deg": 0.008333,
+  "soundings_per_cell_min": 7,
+  "soundings_per_cell_mean": 776.3,
+  "soundings_per_cell_max": 900,
+  "valid_cells_old": 97,
+  "valid_cells_new": 97,
+  "depth_pearson_corr": 0.99175,
+  "depth_mae_m": 18.017,
+  "slope_pearson_corr": 0.920482,
+  "old_slope_median_m_per_km": 1.5561,
+  "new_slope_median_m_per_km": 2.2463,
+  "upgraded_cur_cache": true
+}

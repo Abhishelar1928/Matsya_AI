@@ -128,8 +128,12 @@ async def test_package_builder_without_db_never_claims_live_data():
             destination={"latitude": 16.0, "longitude": 73.1},
         )
     for section in ("manifest", "landing_centre", "destination", "route", "emergency_returns",
-                    "pfz", "warnings", "forecast", "predictions", "safety_rules", "offline_assets"):
+                    "pfz", "warnings", "forecast", "predictions", "safety_rules", "species_catalogue", "offline_assets"):
         assert section in pkg
+    assert pkg["manifest"]["schema_version"] == 2
+    assert "checksums" in pkg["manifest"] and "route" in pkg["manifest"]["checksums"]
+    assert pkg["route"]["is_direct_reference_only"] is True
+    assert len(pkg["species_catalogue"]) > 0
     assert pkg["warnings"]["status"] == "UNAVAILABLE"
     assert pkg["predictions"]["status"] == "UNAVAILABLE"
     assert pkg["pfz"]["status"] == "UNAVAILABLE"

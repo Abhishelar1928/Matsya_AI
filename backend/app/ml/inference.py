@@ -1,15 +1,20 @@
 """
-MatsyaAI Maharashtra — Phase 4 Inference Pipeline.
+MatsyaAI Maharashtra — Phase 4 Production Inference Pipeline.
 
-Applies the validated Phase 3 XGBoost model to produce next-calendar-day (T+1)
-apparent fishing activity predictions for all canonical Maharashtra marine grid cells.
-The model is strictly frozen and never retrained during inference.
+Supports the frozen two-stage `Phase4_SpatioOcean_v1` pipeline (Stage 1 Habitat
+Suitability + Stage 2 Operational XGBoost + Post-Hoc Calibration) with clean
+fallback to Phase 3 (`Phase3_XGBoost_v1`) when requested (`prefer_phase4=False`)
+or when Phase 4 artifacts are absent.
+
+All models and calibrators are strictly frozen during inference. Safety is NEVER
+determined by ML scores; SafetyGate remains 100% independent.
 """
+
+from __future__ import annotations
 
 import json
 import logging
 import math
-import time
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
@@ -19,7 +24,11 @@ import joblib
 import numpy as np
 import pandas as pd
 
-from global_land_mask import globe
+try:
+    from global_land_mask import globe
+except ImportError:
+    globe = None
+
 from backend.app.ml.config import (
     ARTIFACTS_DIR,
     GRID_MAX_LAT,
@@ -28,10 +37,29 @@ from backend.app.ml.config import (
     GRID_MIN_LON,
     GRID_RESOLUTION,
     HISTORICAL_CACHE_PATH,
-    OPEN_METEO_MAX_LOCATIONS,
+    MULTIYEAR_HISTORICAL_CACHE_PATH,
+    OCEAN_CACHE_DIR,
+    PHASE4_CALIBRATOR_PATH,
+    PHASE4_FEATURES_PATH,
+    PHASE4_METADATA_PATH,
+    PHASE4_SEASONAL_CALIBRATOR_PATH,
+    PHASE4_STAGE1_IMPUTER_PATH,
+    PHASE4_STAGE1_MODEL_PATH,
+    PHASE4_STAGE1_SCALER_PATH,
+    PHASE4_STAGE2_IMPUTER_PATH,
+    PHASE4_STAGE2_MODEL_PATH,
+    PHASE4_STAGE2_SCALER_PATH,
+    PHASE4_THRESHOLD_PATH,
 )
 from backend.app.ml.dataset_builder import _LANDING_CENTRES, _haversine
-from ml.features.causal_dataset import FEATURE_COLUMNS, build_causal_dataset
+from ml.features.features_spatial_ocean import (
+    OCEAN_HABITAT_FEATURES,
+    SPATIAL_NEIGHBOR_FEATURES,
+    GriddedOceanIngestor,
+    SpatialAdjacencyMapper,
+    compute_ocean_habitat_features,
+    compute_spatial_neighborhood_features,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -45,26 +73,106 @@ PHASE3_FEATURES_PATH = ARTIFACTS_DIR / "phase3_feature_columns.json"
 
 class Phase4InferencePipeline:
     """
-    Phase 4 Inference Pipeline for next-calendar-day apparent fishing activity.
+    Production Inference Pipeline supporting two-stage Phase 4 (`Phase4_SpatioOcean_v1`)
+    and frozen Phase 3 fallback (`Phase3_XGBoost_v1`).
     """
 
-    def __init__(self, demo_mode: bool = False):
+    def __init__(self, demo_mode: bool = False, prefer_phase4: bool = True):
         self.demo_mode = demo_mode
+        self.prefer_phase4 = prefer_phase4
+        self._pipeline_mode = "phase3"
+
+        # Phase 3 fields
         self._model = None
         self._imputer = None
         self._scaler = None
-        self._threshold_info = None
-        self._feature_columns = None
-        self._metadata = None
+
+        # Phase 4 fields
+        self._stage1_model = None
+        self._stage1_imputer = None
+        self._stage1_scaler = None
+        self._stage2_model = None
+        self._stage2_imputer = None
+        self._stage2_scaler = None
+        self._calibrator = None
+        self._seasonal_calibrator = None
+        self._stage1_features: List[str] = []
+        self._stage2_features: List[str] = []
+
+        self._threshold_info: Dict[str, Any] = {}
+        self._feature_columns: List[str] = []
+        self._metadata: Dict[str, Any] = {}
         self._loaded = False
+
         self._historical_reference_df: Optional[pd.DataFrame] = None
+        self._seasonal_anchor_date: Optional[pd.Timestamp] = None
+        self._gfw_context_mode: str = "latest_active_window"
         self._cached_env_df: Optional[pd.DataFrame] = None
         self._cached_env_status: str = "UNKNOWN"
         self._cached_env_time: Optional[datetime] = None
+        self._cached_ocean_status: str = "UNAVAILABLE"
+        self._cached_ocean_latest_date: Optional[str] = None
         self._last_provenance: Optional[Dict[str, Any]] = None
 
+    @staticmethod
+    def _phase4_artifacts_exist() -> bool:
+        required = [
+            PHASE4_STAGE1_MODEL_PATH,
+            PHASE4_STAGE1_IMPUTER_PATH,
+            PHASE4_STAGE1_SCALER_PATH,
+            PHASE4_STAGE2_MODEL_PATH,
+            PHASE4_STAGE2_IMPUTER_PATH,
+            PHASE4_STAGE2_SCALER_PATH,
+            PHASE4_CALIBRATOR_PATH,
+            PHASE4_FEATURES_PATH,
+            PHASE4_THRESHOLD_PATH,
+        ]
+        return all(p.exists() for p in required)
+
     def load_artifacts(self):
-        """Loads frozen Phase 3 model artifacts."""
+        """Loads frozen Phase 4 artifacts if available and preferred; else loads Phase 3."""
+        if self.prefer_phase4 and self._phase4_artifacts_exist():
+            self._stage1_model = joblib.load(PHASE4_STAGE1_MODEL_PATH)
+            self._stage1_imputer = joblib.load(PHASE4_STAGE1_IMPUTER_PATH)
+            self._stage1_scaler = joblib.load(PHASE4_STAGE1_SCALER_PATH)
+            self._stage2_model = joblib.load(PHASE4_STAGE2_MODEL_PATH)
+            self._stage2_imputer = joblib.load(PHASE4_STAGE2_IMPUTER_PATH)
+            self._stage2_scaler = joblib.load(PHASE4_STAGE2_SCALER_PATH)
+            self._calibrator = joblib.load(PHASE4_CALIBRATOR_PATH)
+            self._seasonal_calibrator = (
+                joblib.load(PHASE4_SEASONAL_CALIBRATOR_PATH)
+                if PHASE4_SEASONAL_CALIBRATOR_PATH.exists()
+                else None
+            )
+
+            with open(PHASE4_FEATURES_PATH) as fp:
+                feat_payload = json.load(fp)
+            if isinstance(feat_payload, dict):
+                self._stage1_features = list(feat_payload["stage1_features"])
+                self._stage2_features = list(feat_payload["stage2_features"])
+            else:
+                self._stage2_features = list(feat_payload)
+            self._feature_columns = list(self._stage2_features)
+
+            with open(PHASE4_THRESHOLD_PATH) as fp:
+                self._threshold_info = json.load(fp)
+
+            if PHASE4_METADATA_PATH.exists():
+                with open(PHASE4_METADATA_PATH) as fp:
+                    self._metadata = json.load(fp)
+            else:
+                self._metadata = {"model_version": "Phase4_SpatioOcean_v1"}
+
+            self._pipeline_mode = "phase4"
+            self._loaded = True
+            logger.info(
+                f"Loaded Phase 4 two-stage model ({self._metadata.get('model_version', 'Phase4_SpatioOcean_v1')}) "
+                f"with calibration={self._threshold_info.get('calibration_method')}, "
+                f"threshold={self._threshold_info.get('decision_threshold')}."
+            )
+            return
+
+        # Fallback to frozen Phase 3 pipeline
         required = [
             PHASE3_MODEL_PATH,
             PHASE3_IMPUTER_PATH,
@@ -91,7 +199,10 @@ class Phase4InferencePipeline:
         if PHASE3_METADATA_PATH.exists():
             with open(PHASE3_METADATA_PATH) as fp:
                 self._metadata = json.load(fp)
+        else:
+            self._metadata = {}
 
+        self._pipeline_mode = "phase3"
         self._loaded = True
         logger.info(
             f"Loaded Phase 3 model ({self._metadata.get('model_version', 'Phase3_XGBoost_v1')}) "
@@ -99,13 +210,16 @@ class Phase4InferencePipeline:
         )
 
     def _load_historical_context(self) -> pd.DataFrame:
-        """
-        Loads recent historical GFW patterns to seed causal trailing features.
-        """
+        """Loads recent historical GFW patterns to seed causal trailing features."""
         if self._historical_reference_df is None:
-            if HISTORICAL_CACHE_PATH.exists():
-                logger.info(f"Loading historical context from {HISTORICAL_CACHE_PATH}...")
-                df = pd.read_parquet(HISTORICAL_CACHE_PATH)
+            hist_path = (
+                MULTIYEAR_HISTORICAL_CACHE_PATH
+                if MULTIYEAR_HISTORICAL_CACHE_PATH.exists()
+                else HISTORICAL_CACHE_PATH
+            )
+            if hist_path.exists():
+                logger.info(f"Loading historical context from {hist_path}...")
+                df = pd.read_parquet(hist_path)
                 df["observation_date"] = pd.to_datetime(df["observation_date"])
                 self._historical_reference_df = df
             else:
@@ -113,8 +227,100 @@ class Phase4InferencePipeline:
                 self._historical_reference_df = pd.DataFrame()
         return self._historical_reference_df
 
+    @staticmethod
+    def _resolve_seasonal_anchor_date(prediction_time: datetime, max_dt: pd.Timestamp) -> pd.Timestamp:
+        """Resolve the most recent date <= max_dt sharing prediction_time's calendar month/day."""
+        anchor_year = int(max_dt.year)
+        month = int(prediction_time.month)
+        while anchor_year >= int(max_dt.year) - 5:
+            max_day = int(pd.Timestamp(year=anchor_year, month=month, day=1).days_in_month)
+            cand = pd.Timestamp(year=anchor_year, month=month, day=min(int(prediction_time.day), max_day))
+            if cand <= max_dt:
+                return cand
+            anchor_year -= 1
+        return max_dt
+
+    def _get_effective_gfw_history(self, prediction_time: Optional[datetime] = None) -> pd.DataFrame:
+        """
+        Return causal GFW trailing history:
+        - When historical context spans >= 2 years and lags prediction_time by > 14 days,
+          builds a 5-year seasonal climatology over the matching 14-day calendar window
+          (applying a < 1.0 h noise floor matching the > 1.0 h active target) so inference
+          reflects typical seasonal fishing distribution rather than year-end AIS gaps.
+        - Otherwise returns history up to the latest date with actual AIS coverage (`fishing_hours > 0`).
+        """
+        self._seasonal_anchor_date = None
+        self._gfw_context_mode = "latest_active_window"
+        hist = self._load_historical_context()
+        if hist.empty:
+            return hist
+
+        obs_dt = pd.to_datetime(hist["observation_date"])
+        max_dt = obs_dt.max()
+        years = int(obs_dt.dt.year.nunique())
+
+        if prediction_time is not None and years >= 2 and (pd.Timestamp(prediction_time.date()) - max_dt).days > 14:
+            target_doy = min(365, int(prediction_time.timetuple().tm_yday))
+            window_doys = [((target_doy - 13 + k - 1) % 365) + 1 for k in range(14)]
+            anchor_dt = self._resolve_seasonal_anchor_date(prediction_time, max_dt)
+            self._seasonal_anchor_date = anchor_dt
+            self._gfw_context_mode = "multiyear_seasonal_climatology"
+
+            doy_series = obs_dt.dt.dayofyear
+            sub = hist[doy_series.isin(window_doys)].copy()
+            sub["_doy"] = pd.to_datetime(sub["observation_date"]).dt.dayofyear
+
+            agg_spec: Dict[str, str] = {"fishing_hours": "mean"}
+            if "ocean_current_velocity" in sub.columns:
+                agg_spec["ocean_current_velocity"] = "mean"
+
+            clim = sub.groupby(["grid_cell_id", "_doy"], as_index=False).agg(agg_spec)
+            clim.loc[clim["fishing_hours"] < 1.0, "fishing_hours"] = 0.0
+            doy_to_date = {d: anchor_dt - pd.Timedelta(days=13 - i) for i, d in enumerate(window_doys)}
+            clim["observation_date"] = clim["_doy"].map(doy_to_date)
+            clim = clim.drop(columns=["_doy"]).sort_values(["grid_cell_id", "observation_date"]).reset_index(drop=True)
+            return clim
+
+        daily_sum = hist.groupby("observation_date")["fishing_hours"].sum()
+        active_dates = daily_sum[daily_sum > 0.0].index
+        if len(active_dates) > 0:
+            latest_active = active_dates.max()
+            return hist[hist["observation_date"] <= latest_active].copy()
+        return hist
+
     def _generate_grid(self) -> List[Dict]:
-        """Generate canonical 0.25° Maharashtra marine grid cells."""
+        """
+        Generate canonical 0.25-deg Maharashtra marine grid cells.
+        Uses global_land_mask when installed; otherwise extracts the exact canonical
+        97 ocean-masked grid cells from the validated historical dataset.
+        """
+        if globe is None:
+            hist = self._load_historical_context()
+            if not hist.empty and {"grid_cell_id", "latitude", "longitude"}.issubset(hist.columns):
+                unique_cells = (
+                    hist[["grid_cell_id", "latitude", "longitude"]]
+                    .drop_duplicates(subset=["grid_cell_id"])
+                    .sort_values("grid_cell_id")
+                )
+                cells: List[Dict[str, Any]] = []
+                for row in unique_cells.itertuples(index=False):
+                    c_lat = round(float(row.latitude), 4)
+                    c_lon = round(float(row.longitude), 4)
+                    dist = min(
+                        _haversine(c_lat, c_lon, lc[0], lc[1])
+                        for lc in _LANDING_CENTRES
+                    )
+                    cells.append(
+                        {
+                            "grid_cell_id": str(row.grid_cell_id),
+                            "latitude": c_lat,
+                            "longitude": c_lon,
+                            "distance_to_coast_km": round(dist, 2),
+                            "is_coastal": 1.0 if dist <= 50.0 else 0.0,
+                        }
+                    )
+                return cells
+
         cells = []
         lat = GRID_MIN_LAT
         while lat <= GRID_MAX_LAT:
@@ -122,18 +328,21 @@ class Phase4InferencePipeline:
             while lon <= GRID_MAX_LON:
                 centroid_lat = round(lat + GRID_RESOLUTION / 2, 4)
                 centroid_lon = round(lon + GRID_RESOLUTION / 2, 4)
-                
-                # Check corners and centroid
+
                 points = [
                     (centroid_lat, centroid_lon),
                     (lat, lon),
                     (lat + GRID_RESOLUTION, lon),
                     (lat, lon + GRID_RESOLUTION),
-                    (lat + GRID_RESOLUTION, lon + GRID_RESOLUTION)
+                    (lat + GRID_RESOLUTION, lon + GRID_RESOLUTION),
                 ]
-                
-                # is_marine if any point is ocean
-                if any(globe.is_ocean(p[0], p[1]) for p in points):
+
+                if globe is not None:
+                    is_ocean = any(globe.is_ocean(p[0], p[1]) for p in points)
+                else:
+                    is_ocean = centroid_lon <= 73.25 or centroid_lat <= 16.75
+
+                if is_ocean:
                     dist = min(
                         _haversine(centroid_lat, centroid_lon, lc[0], lc[1])
                         for lc in _LANDING_CENTRES
@@ -150,7 +359,9 @@ class Phase4InferencePipeline:
             lat = round(lat + GRID_RESOLUTION, 4)
         return cells
 
-    def _fetch_current_env(self, grid_cells: List[Dict]) -> Tuple[pd.DataFrame, str]:
+    def _fetch_current_env(
+        self, grid_cells: List[Dict], prediction_time: Optional[datetime] = None
+    ) -> Tuple[pd.DataFrame, str]:
         """
         Fetches current environmental observations from Open-Meteo Current API.
         Falls back gracefully to cached real observations under DEMO_MODE if network is unavailable.
@@ -163,7 +374,7 @@ class Phase4InferencePipeline:
 
         if self.demo_mode:
             logger.info("Operating in DEMO_MODE: Sourcing environmental data from real historical cache.")
-            fb = self._get_fallback_env(grid_cells)
+            fb = self._get_fallback_env(grid_cells, prediction_time=prediction_time)
             self._cached_env_df = fb
             self._cached_env_status = "DEMO_MODE"
             self._cached_env_time = now
@@ -182,7 +393,7 @@ class Phase4InferencePipeline:
                 marine_url = (
                     f"https://marine-api.open-meteo.com/v1/marine"
                     f"?latitude={lats}&longitude={lons}"
-                    f"&current=wave_height,wave_period,wave_direction,swell_wave_height"
+                    f"&current=wave_height,wave_period,wave_direction,swell_wave_height,ocean_current_velocity"
                     f"&timezone=UTC"
                 )
                 weather_url = (
@@ -201,14 +412,15 @@ class Phase4InferencePipeline:
                 m_list = marine_data if isinstance(marine_data, list) else [marine_data]
                 w_list = weather_data if isinstance(weather_data, list) else [weather_data]
 
-                for idx, (lat_val, lon_val, cell_id) in enumerate(batch):
-                    row = {"grid_cell_id": cell_id}
+                for idx, (_lat_val, _lon_val, cell_id) in enumerate(batch):
+                    row: Dict[str, Any] = {"grid_cell_id": cell_id}
                     if idx < len(m_list) and m_list[idx]:
                         mc = m_list[idx].get("current", {})
                         row["wave_height"] = mc.get("wave_height")
                         row["wave_period"] = mc.get("wave_period")
                         row["wave_direction"] = mc.get("wave_direction")
                         row["swell_wave_height"] = mc.get("swell_wave_height")
+                        row["ocean_current_velocity"] = mc.get("ocean_current_velocity")
 
                     if idx < len(w_list) and w_list[idx]:
                         wc = w_list[idx].get("current", {})
@@ -224,19 +436,32 @@ class Phase4InferencePipeline:
 
         except Exception as e:
             logger.warning(f"Live environmental fetch failed ({e}). Switching to DEMO_MODE fallback.")
-            fb = self._get_fallback_env(grid_cells)
+            fb = self._get_fallback_env(grid_cells, prediction_time=prediction_time)
             self._cached_env_df = fb
             self._cached_env_status = "DEMO_MODE"
             self._cached_env_time = now
             return fb, "DEMO_MODE"
 
-    def _get_fallback_env(self, grid_cells: List[Dict]) -> pd.DataFrame:
-        """Extracts representative real environmental records from historical data."""
+    def _get_fallback_env(
+        self, grid_cells: List[Dict], prediction_time: Optional[datetime] = None
+    ) -> pd.DataFrame:
+        """Extracts representative real environmental records from historical data (season-aligned when multi-year)."""
         hist = self._load_historical_context()
         if hist.empty:
             return pd.DataFrame()
-        latest_date = hist["observation_date"].max()
-        subset = hist[hist["observation_date"] == latest_date][
+        obs_dt = pd.to_datetime(hist["observation_date"])
+        max_dt = obs_dt.max()
+        target_dt = max_dt
+        if self._seasonal_anchor_date is not None:
+            eligible = obs_dt[obs_dt <= self._seasonal_anchor_date]
+            if not eligible.empty:
+                target_dt = eligible.max()
+        elif prediction_time is not None and int(obs_dt.dt.year.nunique()) >= 2 and (pd.Timestamp(prediction_time.date()) - max_dt).days > 14:
+            cand = self._resolve_seasonal_anchor_date(prediction_time, max_dt)
+            eligible = obs_dt[obs_dt <= cand]
+            if not eligible.empty:
+                target_dt = eligible.max()
+        subset = hist[obs_dt == target_dt][
             [
                 "grid_cell_id",
                 "wave_height",
@@ -262,18 +487,19 @@ class Phase4InferencePipeline:
         self, grid_cells: List[Dict], env_df: pd.DataFrame, prediction_time: datetime
     ) -> pd.DataFrame:
         """
-        Builds the exact 29-feature matrix expected by the Phase 3 model.
+        Builds the 29 base Phase 3 features cleanly for both Phase 3 and Phase 4 pipelines.
         """
         df = pd.DataFrame(grid_cells)
 
-        # Merge environmental variables
         if not env_df.empty:
             df = df.merge(env_df, on="grid_cell_id", how="left")
         else:
             for col in ["wave_height", "wave_period", "wave_direction", "swell_wave_height", "ocean_current_velocity", "wind_speed"]:
                 df[col] = np.nan
 
-        # Circular wave direction encoding
+        if "ocean_current_velocity" not in df.columns:
+            df["ocean_current_velocity"] = np.nan
+
         if "wave_direction" in df.columns:
             df["wave_direction_sin"] = df["wave_direction"].apply(
                 lambda v: math.sin(math.radians(float(v))) if pd.notna(v) else np.nan
@@ -285,12 +511,10 @@ class Phase4InferencePipeline:
             df["wave_direction_sin"] = np.nan
             df["wave_direction_cos"] = np.nan
 
-        # Missingness indicator flags
         df["wave_height_isna"] = df["wave_height"].isna().astype(float)
-        df["ocean_current_isna"] = df["ocean_current_velocity"].isna().astype(float) if "ocean_current_velocity" in df.columns else 1.0
+        df["ocean_current_isna"] = df["ocean_current_velocity"].isna().astype(float)
         df["wind_speed_isna"] = df["wind_speed"].isna().astype(float)
 
-        # Temporal features
         doy = prediction_time.timetuple().tm_yday
         month = prediction_time.month
         dow = prediction_time.weekday()
@@ -300,23 +524,21 @@ class Phase4InferencePipeline:
         df["sin_day_of_year"] = math.sin(2 * math.pi * doy / 365.25)
         df["cos_day_of_year"] = math.cos(2 * math.pi * doy / 365.25)
 
-        # Historical GFW Features (causally computed from latest reference observations)
-        hist = self._load_historical_context()
+        hist = self._get_effective_gfw_history(prediction_time=prediction_time)
         if not hist.empty:
-            # Group historical records by cell
             hist_by_cell = hist.groupby("grid_cell_id")
-            recent_map = {}
-            lag1_map = {}
-            lag2_map = {}
-            lag3_map = {}
-            m7_map = {}
-            max7_map = {}
-            std7_map = {}
-            freq7_map = {}
-            m14_map = {}
+            recent_map: Dict[str, float] = {}
+            lag1_map: Dict[str, float] = {}
+            lag2_map: Dict[str, float] = {}
+            lag3_map: Dict[str, float] = {}
+            m7_map: Dict[str, float] = {}
+            max7_map: Dict[str, float] = {}
+            std7_map: Dict[str, float] = {}
+            freq7_map: Dict[str, float] = {}
+            m14_map: Dict[str, float] = {}
 
             for cid, c_df in hist_by_cell:
-                efforts = c_df.sort_values("observation_date")["fishing_hours"].values
+                efforts = c_df.sort_values("observation_date")["fishing_hours"].fillna(0.0).values
                 if len(efforts) > 0:
                     recent_map[cid] = float(efforts[-1])
                     lag1_map[cid] = float(efforts[-2]) if len(efforts) >= 2 else 0.0
@@ -355,8 +577,106 @@ class Phase4InferencePipeline:
             ]:
                 df[c] = 0.0
 
-        # Guarantee all feature columns exist in exact training order
         for col in self._feature_columns:
+            if col not in df.columns:
+                df[col] = np.nan
+
+        return df
+
+    def _build_phase4_features(
+        self, grid_cells: List[Dict], env_df: pd.DataFrame, prediction_time: datetime
+    ) -> pd.DataFrame:
+        """
+        Extends the base feature matrix with causal spatial neighborhood AIS context,
+        current convergence proxy, GEBCO bathymetry, daily SST thermal front gradients,
+        and trailing 3/7/14-day Chl-a habitat signals.
+        """
+        df = self._build_features(grid_cells, env_df, prediction_time)
+        mapper = SpatialAdjacencyMapper(grid_cells)
+
+        # 1. Spatial neighbor AIS context from trailing historical window
+        hist = self._get_effective_gfw_history(prediction_time=prediction_time)
+        if not hist.empty:
+            hist_dates = sorted(pd.to_datetime(hist["observation_date"]).unique())
+            tail_dates = hist_dates[-14:]
+            hist_tail = hist[pd.to_datetime(hist["observation_date"]).isin(tail_dates)][
+                ["grid_cell_id", "observation_date", "fishing_hours", "ocean_current_velocity"]
+            ].copy()
+            ais_nbr_all = compute_spatial_neighborhood_features(hist_tail, mapper, gfw_lag_days=0)
+            latest_gfw_dt = ais_nbr_all["observation_date"].max()
+            ais_nbr_latest = ais_nbr_all[ais_nbr_all["observation_date"] == latest_gfw_dt].drop(
+                columns=["observation_date", "current_convergence_proxy", "current_convergence_isna"],
+                errors="ignore",
+            )
+            df = df.drop(columns=[c for c in ais_nbr_latest.columns if c != "grid_cell_id" and c in df.columns])
+            df = df.merge(ais_nbr_latest, on="grid_cell_id", how="left")
+        else:
+            for col in SPATIAL_NEIGHBOR_FEATURES:
+                if not col.startswith("current_convergence"):
+                    df[col] = 0.0
+
+        # 2. Current convergence proxy strictly from active env_df snapshot
+        curr_frame = df[["grid_cell_id", "ocean_current_velocity"]].copy()
+        curr_frame["observation_date"] = pd.Timestamp(prediction_time.date())
+        curr_frame["fishing_hours"] = 0.0
+        conv_df = compute_spatial_neighborhood_features(curr_frame, mapper, gfw_lag_days=0)[
+            ["grid_cell_id", "current_convergence_proxy", "current_convergence_isna"]
+        ]
+        df = df.drop(columns=[c for c in ("current_convergence_proxy", "current_convergence_isna") if c in df.columns])
+        df = df.merge(conv_df, on="grid_cell_id", how="left")
+
+        # 3. Ocean habitat + bathymetry features from cache (never blocks on missing network)
+        ingestor = GriddedOceanIngestor(ocean_cache_dir=OCEAN_CACHE_DIR)
+        bathy_df = ingestor.load_bathymetry(grid_cells, allow_fetch=False)
+        sst_all = ingestor.load_daily_sst(grid_cells, "2020-01-01", "2030-12-31", allow_fetch=False)
+        chl_all = ingestor.load_daily_chla(grid_cells, "2020-01-01", "2030-12-31", allow_fetch=False)
+
+        ocean_dates = sorted(
+            set(pd.to_datetime(sst_all["observation_date"]).unique() if not sst_all.empty else [])
+            | set(pd.to_datetime(chl_all["observation_date"]).unique() if not chl_all.empty else [])
+        )
+        if self._seasonal_anchor_date is not None and ocean_dates:
+            anchored_ocean = [d for d in ocean_dates if pd.Timestamp(d) <= self._seasonal_anchor_date]
+            if anchored_ocean:
+                ocean_dates = anchored_ocean
+
+        if ocean_dates:
+            tail_ocean_dates = ocean_dates[-14:]
+            latest_ocean_dt = pd.Timestamp(tail_ocean_dates[-1])
+            self._cached_ocean_status = "CACHED_OCEAN"
+            self._cached_ocean_latest_date = str(latest_ocean_dt.date())
+
+            grid_rows = []
+            for dt_val in tail_ocean_dates:
+                for c in grid_cells:
+                    grid_rows.append({"grid_cell_id": c["grid_cell_id"], "observation_date": dt_val})
+            ocean_panel = pd.DataFrame(grid_rows)
+            ocean_feats_all = compute_ocean_habitat_features(
+                ocean_panel, mapper, sst_df=sst_all, chla_df=chl_all, bathy_df=bathy_df
+            )
+            ocean_latest = ocean_feats_all[ocean_feats_all["observation_date"] == latest_ocean_dt].drop(
+                columns=["observation_date"]
+            )
+        else:
+            self._cached_ocean_status = "UNAVAILABLE"
+            self._cached_ocean_latest_date = None
+            ocean_panel = pd.DataFrame(
+                [
+                    {
+                        "grid_cell_id": c["grid_cell_id"],
+                        "observation_date": pd.Timestamp(prediction_time.date()),
+                    }
+                    for c in grid_cells
+                ]
+            )
+            ocean_latest = compute_ocean_habitat_features(
+                ocean_panel, mapper, sst_df=None, chla_df=None, bathy_df=bathy_df
+            ).drop(columns=["observation_date"])
+
+        df = df.drop(columns=[c for c in OCEAN_HABITAT_FEATURES if c in df.columns])
+        df = df.merge(ocean_latest, on="grid_cell_id", how="left")
+
+        for col in set(self._stage1_features + self._stage2_features):
             if col not in df.columns:
                 df[col] = np.nan
 
@@ -368,16 +688,14 @@ class Phase4InferencePipeline:
         """
         Builds prediction provenance metadata describing what data sources
         contributed and their freshness.
-
-        This is METADATA ONLY — the frozen Phase 3 model logic is untouched.
         """
         now = prediction_time
 
-        # --- Open-Meteo Marine source ---
         env_source: Dict[str, Any] = {
             "status": env_status,
-            "data_timestamp": (self._cached_env_time.isoformat()
-                               if self._cached_env_time else None),
+            "data_timestamp": (
+                self._cached_env_time.isoformat() if self._cached_env_time else None
+            ),
             "age_minutes": None,
         }
         if self._cached_env_time:
@@ -385,23 +703,26 @@ class Phase4InferencePipeline:
                 max(0.0, (now - self._cached_env_time).total_seconds() / 60.0), 1
             )
 
-        # --- Global Fishing Watch historical context ---
         hist = self._historical_reference_df
         gfw_has_data = hist is not None and not hist.empty
-        gfw_source: Dict[str, Any]
         if gfw_has_data:
             latest_obs_date = hist["observation_date"].max()
-            if hasattr(latest_obs_date, 'to_pydatetime'):
+            if hasattr(latest_obs_date, "to_pydatetime"):
                 latest_obs_date = latest_obs_date.to_pydatetime()
             if latest_obs_date.tzinfo is None:
-                from datetime import timezone as _tz
-                latest_obs_date = latest_obs_date.replace(tzinfo=_tz.utc)
+                latest_obs_date = latest_obs_date.replace(tzinfo=timezone.utc)
             age_days = (now.date() - latest_obs_date.date()).days
             gfw_source = {
                 "status": "CACHED_HISTORICAL",
                 "observation_date": latest_obs_date.isoformat(),
                 "age_days": age_days,
                 "record_count": len(hist),
+                "context_mode": self._gfw_context_mode,
+                "seasonal_anchor_date": (
+                    str(self._seasonal_anchor_date.date())
+                    if self._seasonal_anchor_date is not None
+                    else None
+                ),
             }
         else:
             gfw_source = {
@@ -411,21 +732,12 @@ class Phase4InferencePipeline:
                 "record_count": 0,
             }
 
-        # --- Overall data status ---
-        #  LIVE: all real-time inputs live, no historical source contributes
-        #  HISTORICAL_CONTEXT: real-time env live but GFW historical cache contributes
-        #  MIXED: some inputs live, some stale
-        #  STALE: required real-time inputs are stale or in demo mode
-        #  UNAVAILABLE: critical inputs missing
         if env_status == "LIVE" and not gfw_has_data:
             overall = "LIVE"
         elif env_status == "LIVE" and gfw_has_data:
             overall = "HISTORICAL_CONTEXT"
         elif env_status == "DEMO_MODE":
-            if gfw_has_data:
-                overall = "STALE"
-            else:
-                overall = "STALE"
+            overall = "STALE"
         elif env_status in ("STALE",):
             overall = "MIXED" if gfw_has_data else "STALE"
         else:
@@ -438,6 +750,10 @@ class Phase4InferencePipeline:
             "sources": {
                 "open_meteo_marine": env_source,
                 "global_fishing_watch": gfw_source,
+                "ocean_habitat": {
+                    "status": self._cached_ocean_status,
+                    "latest_observation_date": self._cached_ocean_latest_date,
+                },
             },
         }
         return provenance
@@ -448,7 +764,7 @@ class Phase4InferencePipeline:
 
     def predict(self) -> List[Dict[str, Any]]:
         """
-        Runs inference and produces predictions for all 171 canonical cells.
+        Runs frozen inference and produces predictions for all canonical Maharashtra cells.
         """
         if not self._loaded:
             self.load_artifacts()
@@ -456,51 +772,83 @@ class Phase4InferencePipeline:
         prediction_time = datetime.now(timezone.utc)
         grid_cells = self._generate_grid()
 
-        # Fetch environmental conditions
-        env_df, freshness_status = self._fetch_current_env(grid_cells)
+        env_df, freshness_status = self._fetch_current_env(grid_cells, prediction_time=prediction_time)
 
-        # Build feature matrix
-        feature_df = self._build_features(grid_cells, env_df, prediction_time)
+        if self._pipeline_mode == "phase4":
+            feature_df = self._build_phase4_features(grid_cells, env_df, prediction_time)
 
-        # Preprocessing strictly using frozen Phase 3 transformers
-        X_raw = feature_df[self._feature_columns]
-        X_imputed = self._imputer.transform(X_raw)
-        X_scaled = self._scaler.transform(X_imputed)
+            X1_raw = feature_df[self._stage1_features]
+            X1_imp = self._stage1_imputer.transform(X1_raw)
+            X1_scl = self._stage1_scaler.transform(X1_imp)
+            habitat_scores = np.clip(self._stage1_model.predict_proba(X1_scl)[:, 1], 0.0, 1.0)
+            feature_df["habitat_suitability_score"] = habitat_scores
 
-        # Predict probabilities
-        probabilities = self._model.predict_proba(X_scaled)[:, 1]
-        decision_thresh = float(self._threshold_info.get("decision_threshold", 0.47))
+            X2_raw = feature_df[self._stage2_features]
+            X2_imp = self._stage2_imputer.transform(X2_raw)
+            X2_scl = self._stage2_scaler.transform(X2_imp)
+            raw_probs = np.clip(self._stage2_model.predict_proba(X2_scl)[:, 1], 0.0, 1.0)
+            if self._gfw_context_mode == "multiyear_seasonal_climatology" and self._seasonal_calibrator is not None:
+                probabilities = np.clip(self._seasonal_calibrator.predict_proba(raw_probs), 0.0, 1.0)
+                active_cal_method = f"{self._seasonal_calibrator.method}_seasonal"
+                prediction_mode = "seasonal_climatology"
+            else:
+                probabilities = np.clip(self._calibrator.predict_proba(raw_probs), 0.0, 1.0)
+                active_cal_method = getattr(self._calibrator, "method", "unknown")
+                prediction_mode = (
+                    "seasonal_climatology"
+                    if self._gfw_context_mode == "multiyear_seasonal_climatology"
+                    else "daily_operational"
+                )
+            default_version = "Phase4_SpatioOcean_v1"
+        else:
+            feature_df = self._build_features(grid_cells, env_df, prediction_time)
+            X_raw = feature_df[self._feature_columns]
+            X_imputed = self._imputer.transform(X_raw)
+            X_scaled = self._scaler.transform(X_imputed)
+            probabilities = np.clip(self._model.predict_proba(X_scaled)[:, 1], 0.0, 1.0)
+            habitat_scores = None
+            active_cal_method = None
+            prediction_mode = "daily_operational"
+            default_version = "Phase3_XGBoost_v1"
+
+        base_thresh = float(self._threshold_info.get("decision_threshold", 0.47))
+        decision_thresh = (
+            float(self._threshold_info.get("seasonal_decision_threshold", base_thresh))
+            if prediction_mode == "seasonal_climatology"
+            else base_thresh
+        )
+        seasonal_anchor_str = (
+            str(self._seasonal_anchor_date.date()) if self._seasonal_anchor_date is not None else None
+        )
         binary_classes = (probabilities >= decision_thresh).astype(int)
 
-        model_version = self._metadata.get("model_version", "Phase3_XGBoost_v1")
+        model_version = self._metadata.get("model_version", default_version)
         disclaimer = self._metadata.get(
             "disclaimer",
             "Predicts apparent fishing activity derived from historical GFW AIS patterns. "
             "Does not predict fish presence, biomass, species, or catch guarantee.",
         )
 
-        # Build provenance metadata (does NOT alter model logic)
         provenance = self._build_provenance(freshness_status, prediction_time)
+        provenance["prediction_mode"] = prediction_mode
         self._last_provenance = provenance
         overall_data_status = provenance["overall_data_status"]
 
-        results = []
+        results: List[Dict[str, Any]] = []
         for idx, cell in enumerate(grid_cells):
             prob = round(float(probabilities[idx]), 4)
-            b_class = int(binary_classes[idx])
+            b_class = 1 if prob >= decision_thresh else 0
 
-            # Extract raw environmental observations for HUD/Safety check
             row_env = feature_df.iloc[idx]
             wh = float(row_env["wave_height"]) if pd.notna(row_env.get("wave_height")) else None
             ws = float(row_env["wind_speed"]) if pd.notna(row_env.get("wind_speed")) else None
 
-            results.append({
+            rec: Dict[str, Any] = {
                 "grid_cell_id": cell["grid_cell_id"],
                 "latitude": cell["latitude"],
                 "longitude": cell["longitude"],
                 "distance_to_coast_km": cell["distance_to_coast_km"],
                 "is_coastal": bool(cell["is_coastal"]),
-                # Strict target semantics
                 "predicted_apparent_fishing_probability": prob,
                 "predicted_apparent_fishing_binary": b_class,
                 "prediction_label": (
@@ -511,25 +859,29 @@ class Phase4InferencePipeline:
                 "target_interpretation": "next-calendar-day apparent fishing activity (>1.0 fishing hours)",
                 "decision_threshold": decision_thresh,
                 "model_version": model_version,
+                "prediction_mode": prediction_mode,
+                "seasonal_anchor_date": seasonal_anchor_str,
                 "prediction_timestamp": prediction_time.isoformat(),
                 "data_freshness_status": overall_data_status,
                 "disclaimer": disclaimer,
-                # Environmental snapshot
                 "current_wave_height_m": wh,
                 "current_wind_speed_kmh": ws,
-                # Safety fields (populated by independent safety gate)
                 "safety_status": "NO_WARNING_DATA",
                 "safety_override": False,
-            })
+            }
+            if habitat_scores is not None:
+                rec["habitat_suitability_score"] = round(float(habitat_scores[idx]), 4)
+                rec["calibration_method"] = active_cal_method or "unknown"
+
+            results.append(rec)
 
         logger.info(
-            f"Phase 4 inference complete: {sum(binary_classes)} active cells / "
-            f"{len(binary_classes)} total (data_status: {overall_data_status})"
+            f"Inference complete ({model_version}): {sum(r['predicted_apparent_fishing_binary'] for r in results)} "
+            f"active cells / {len(results)} total (data_status: {overall_data_status})"
         )
         return results
 
 
-# Global singleton pipeline instance
 _pipeline_instance: Optional[Phase4InferencePipeline] = None
 
 

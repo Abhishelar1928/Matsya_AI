@@ -9,6 +9,7 @@ section is returned as UNAVAILABLE — values are never fabricated.
 from __future__ import annotations
 
 import logging
+import math
 from datetime import datetime, timezone
 from typing import Any, Dict, List
 
@@ -18,7 +19,10 @@ logger = logging.getLogger(__name__)
 
 MARINE_URL = "https://marine-api.open-meteo.com/v1/marine"
 WEATHER_URL = "https://api.open-meteo.com/v1/forecast"
-MARINE_VARS = "wave_height,wave_period,wave_direction,swell_wave_height"
+MARINE_VARS = (
+    "wave_height,wave_period,wave_direction,swell_wave_height,"
+    "swell_wave_period,ocean_current_velocity,ocean_current_direction,sea_surface_temperature"
+)
 WEATHER_VARS = "wind_speed_10m,wind_direction_10m,wind_gusts_10m"
 FORECAST_DAYS = 3
 MAX_POINTS = 6
@@ -37,12 +41,37 @@ def _as_list(payload: Any) -> List[Dict]:
     return payload if isinstance(payload, list) else [payload]
 
 
+def _normalize_current_mps(speeds: List[Any], unit: str) -> List[Any]:
+    factor = (1.0 / 3.6) if unit.lower() in ("km/h", "kmh") else 1.0
+    return [None if s is None else round(float(s) * factor, 4) for s in speeds]
+
+
+def _uv_components(speeds_mps: List[Any], dirs: List[Any]) -> tuple[List[Any], List[Any]]:
+    u_list: List[Any] = []
+    v_list: List[Any] = []
+    for spd, deg in zip(speeds_mps, dirs):
+        if spd is None or deg is None:
+            u_list.append(None)
+            v_list.append(None)
+        else:
+            rad = math.radians(float(deg))
+            u_list.append(round(float(spd) * math.sin(rad), 4))
+            v_list.append(round(float(spd) * math.cos(rad), 4))
+    return u_list, v_list
+
+
 def _merge(points: List[Dict], marine: List[Dict], weather: List[Dict]) -> List[Dict]:
     out = []
     for i, pt in enumerate(points):
-        m = (marine[i] if i < len(marine) else {}).get("hourly", {}) or {}
+        m_item = marine[i] if i < len(marine) else {}
+        m = m_item.get("hourly", {}) or {}
+        m_units = m_item.get("hourly_units", {}) or {}
         w = (weather[i] if i < len(weather) else {}).get("hourly", {}) or {}
         times = m.get("time") or w.get("time") or []
+        curr_unit = str(m_units.get("ocean_current_velocity") or "km/h")
+        curr_spd = _normalize_current_mps(m.get("ocean_current_velocity", []), curr_unit)
+        curr_dir = m.get("ocean_current_direction", [])
+        u_mps, v_mps = _uv_components(curr_spd, curr_dir)
         out.append({
             "waypoint_index": pt.get("index"),
             "latitude": pt["latitude"],
@@ -53,6 +82,12 @@ def _merge(points: List[Dict], marine: List[Dict], weather: List[Dict]) -> List[
                 "wave_period_s": m.get("wave_period", []),
                 "wave_direction_deg": m.get("wave_direction", []),
                 "swell_wave_height_m": m.get("swell_wave_height", []),
+                "swell_wave_period_s": m.get("swell_wave_period", []),
+                "ocean_current_velocity_mps": curr_spd,
+                "ocean_current_direction_deg": curr_dir,
+                "ocean_current_u_mps": u_mps,
+                "ocean_current_v_mps": v_mps,
+                "sea_surface_temperature_c": m.get("sea_surface_temperature", []),
                 "wind_speed_kmh": w.get("wind_speed_10m", []),
                 "wind_direction_deg": w.get("wind_direction_10m", []),
                 "wind_gusts_kmh": w.get("wind_gusts_10m", []),

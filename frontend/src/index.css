@@ -744,3 +744,85 @@ button {
 .text-xs { font-size: 12px; }
 .fw-500 { font-weight: 500; }
 .fw-600 { font-weight: 600; }
+
+/* --- Marine At-Sea HUD & Night Mode ---------------------------------------- */
+.marine-hud {
+  --hud-bg: #071220;
+  --hud-card: #0e1d33;
+  --hud-border: #1e3554;
+  --hud-text: #f1f5f9;
+  --hud-muted: #94a3b8;
+  --hud-cyan: #38bdf8;
+  --hud-amber: #fbbf24;
+  --hud-green: #34d399;
+  background: var(--hud-bg);
+  color: var(--hud-text);
+  border: 1px solid var(--hud-border);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.marine-hud.marine-night {
+  --hud-bg: #050101;
+  --hud-card: #120406;
+  --hud-border: #4a1218;
+  --hud-text: #ff9999;
+  --hud-muted: #c0565c;
+  --hud-cyan: #ff6b6b;
+  --hud-amber: #fb923c;
+  --hud-green: #fca5a5;
+}
+
+.marine-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--hud-card);
+  border: 1px solid var(--hud-border);
+  margin-bottom: 14px;
+}
+
+.marine-stat {
+  background: var(--hud-card);
+  border: 1px solid var(--hud-border);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.marine-stat-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--hud-muted);
+}
+
+.marine-stat-val {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--hud-text);
+  line-height: 1.25;
+  margin-top: 2px;
+}
+
+.marine-stat-sub {
+  font-size: 12px;
+  color: var(--hud-muted);
+  margin-top: 2px;
+}
+
+.marine-panel {
+  background: var(--hud-card);
+  border: 1px solid var(--hud-border);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.marine-hud .select {
+  background: var(--hud-bg);
+  color: var(--hud-text);
+  border-color: var(--hud-border);
+}

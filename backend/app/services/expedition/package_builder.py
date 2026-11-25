@@ -12,6 +12,8 @@ packaged warnings/forecast and falls back to NO_WARNING_DATA after expiry.
 
 from __future__ import annotations
 
+import hashlib
+import json
 import logging
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -32,16 +34,60 @@ from backend.app.services.pfz_query import get_latest_pfz_batch
 
 logger = logging.getLogger(__name__)
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
+PACKAGE_VERSION = "2.0.0"
 PREDICTION_VALIDITY = timedelta(hours=24)
+
+SPECIES_CATALOGUE: List[Dict[str, str]] = [
+    {"id": "pomfret_silver", "en": "Silver Pomfret", "mr": "पापलेट (सफेद)", "scientific": "Pampus argenteus", "category": "pelagic"},
+    {"id": "pomfret_black", "en": "Black Pomfret", "mr": "हलवा", "scientific": "Parastromateus niger", "category": "pelagic"},
+    {"id": "bombay_duck", "en": "Bombay Duck", "mr": "बोंबील", "scientific": "Harpadon nehereus", "category": "pelagic"},
+    {"id": "mackerel", "en": "Indian Mackerel", "mr": "बांगडा", "scientific": "Rastrelliger kanagurta", "category": "pelagic"},
+    {"id": "sardine", "en": "Oil Sardine", "mr": "तारली", "scientific": "Sardinella longiceps", "category": "pelagic"},
+    {"id": "prawn", "en": "Prawn / Shrimp", "mr": "कोळंबी", "scientific": "Penaeus / Metapenaeus spp.", "category": "crustacean"},
+    {"id": "surmai", "en": "Kingfish / Surmai", "mr": "सुरमई", "scientific": "Scomberomorus commerson", "category": "pelagic"},
+    {"id": "rawas", "en": "Indian Salmon (Rawas)", "mr": "रावस", "scientific": "Eleutheronema tetradactylum", "category": "demersal"},
+    {"id": "ghol", "en": "Blackspotted Croaker (Ghol)", "mr": "घोळ", "scientific": "Protonibea diacanthus", "category": "demersal"},
+    {"id": "koth", "en": "Croaker (Koth / Dhoma)", "mr": "ढोमा / कोथ", "scientific": "Otolithoides biauritus", "category": "demersal"},
+    {"id": "squid", "en": "Squid", "mr": "माकूळ", "scientific": "Uroteuthis duvaucelii", "category": "cephalopod"},
+    {"id": "cuttlefish", "en": "Cuttlefish", "mr": "गोट्या माकूळ", "scientific": "Sepia pharaonis", "category": "cephalopod"},
+    {"id": "tuna", "en": "Yellowfin / Skipjack Tuna", "mr": "कुपा", "scientific": "Thunnus / Katsuwonus spp.", "category": "pelagic"},
+    {"id": "ribbonfish", "en": "Ribbonfish", "mr": "वागटी / बाला", "scientific": "Trichiurus lepturus", "category": "demersal"},
+    {"id": "lobster", "en": "Spiny Lobster", "mr": "शेवंड", "scientific": "Panulirus polyphagus", "category": "crustacean"},
+    {"id": "other", "en": "Other / Mixed Catch", "mr": "इतर", "scientific": "Unclassified", "category": "other"},
+]
+
+
+def _canonical_for_hash(val: Any) -> Any:
+    if isinstance(val, list):
+        return [_canonical_for_hash(x) for x in val]
+    if isinstance(val, dict):
+        return {k: _canonical_for_hash(v) for k, v in val.items()}
+    if isinstance(val, float) and val.is_integer():
+        return int(val)
+    return val
+
+
+def _sha256_canonical(val: Any) -> str:
+    encoded = json.dumps(
+        _canonical_for_hash(val),
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
 
 OFFLINE_ASSETS_DIR = Path(__file__).resolve().parents[3] / "static" / "offline"
 OFFLINE_ASSETS_URL = "/api/v1/offline-assets"
 BASEMAP_FILE = "maharashtra-coast.pmtiles"
 BATHYMETRY_FILE = "bathymetry-contours.geojson"
+MPA_FILE = "marine-protected-areas.geojson"
+OFFSHORE_FILE = "offshore-installations.geojson"
+SHIPPING_FILE = "shipping-lanes.geojson"
+CURRENTS_FILE = "ocean-currents-latest.geojson"
 
 # Maharashtra coastal bounding box (matches ml/config grid, padded)
-REGION_BBOX = {"min_lat": 15.5, "max_lat": 20.5, "min_lon": 71.5, "max_lon": 74.0}
+REGION_BBOX = {"min_lat": 15.0, "max_lat": 20.6, "min_lon": 71.0, "max_lon": 74.2}
 
 DISCLAIMERS = [
     "Decision support only. Not a navigational chart. Always follow official IMD/INCOIS advisories and port signals.",
@@ -185,7 +231,11 @@ def offline_assets() -> Dict[str, Any]:
         }
     return {
         "basemap": asset(BASEMAP_FILE, "pmtiles-vector", "OpenStreetMap contributors (ODbL). Not a nautical chart."),
-        "bathymetry": asset(BATHYMETRY_FILE, "geojson-contours", "GEBCO Compilation Group. Not for navigation."),
+        "bathymetry": asset(BATHYMETRY_FILE, "geojson-contours", "GEBCO general-purpose bathymetry (10/20/50/100/200 m). NOT verified navigation depth."),
+        "marine_protected_areas": asset(MPA_FILE, "geojson-polygons", "Verified public MPA boundaries (Malvan Marine Sanctuary)."),
+        "offshore_installations": asset(OFFSHORE_FILE, "geojson-points", "Verified public offshore platform points where available."),
+        "shipping_lanes": asset(SHIPPING_FILE, "geojson-lines", "OpenSeaMap seamark lanes where available (not official ENC)."),
+        "ocean_currents": asset(CURRENTS_FILE, "geojson-vectors", "Coarse modeled surface currents (U/V) for drift estimation only."),
         "nautical_charts": {"kind": "enc", "available": False,
                             "note": "Official NHO charts not included (licensing)."},
         "bbox": REGION_BBOX,
@@ -201,6 +251,7 @@ async def build_package(
     db: Optional[Any],
     device_id: str,
     landing_centre: LandingCentreInfo,
+    origin: Optional[Dict] = None,
     destination: Optional[Dict] = None,
     pfz_index: Optional[int] = None,
     planned_departure: Optional[datetime] = None,
@@ -210,7 +261,14 @@ async def build_package(
     pfz = await get_latest_pfz_batch(db)
     dest = resolve_destination(destination, pfz_index, pfz)
 
-    start = {"latitude": landing_centre.latitude, "longitude": landing_centre.longitude, "name": landing_centre.name}
+    if origin is not None:
+        start = {
+            "latitude": float(origin["latitude"]),
+            "longitude": float(origin["longitude"]),
+            "name": origin.get("name") or "Current location",
+        }
+    else:
+        start = {"latitude": landing_centre.latitude, "longitude": landing_centre.longitude, "name": landing_centre.name}
     route = build_route(start, dest)
 
     warnings = await get_active_warnings(db)
@@ -224,16 +282,43 @@ async def build_package(
         pfz.get("validity_date"),
     )
 
+    emergency_returns = build_emergency_returns(dest, route)
+    rules = safety_rules()
+    assets = offline_assets()
+    created_iso = _iso(created_at)
+
+    checksums = {
+        "route": _sha256_canonical(route),
+        "emergency_returns": _sha256_canonical(emergency_returns),
+        "pfz": _sha256_canonical(pfz),
+        "warnings": _sha256_canonical(warnings),
+        "forecast": _sha256_canonical(forecast),
+        "predictions": _sha256_canonical(predictions),
+        "safety_rules": _sha256_canonical(rules),
+    }
+
     package_id = str(uuid.uuid4())
     return {
         "manifest": {
             "schema_version": SCHEMA_VERSION,
+            "version": PACKAGE_VERSION,
+            "source": "MatsyaAI Maharashtra Expedition Builder",
             "package_id": package_id,
             "device_id": device_id,
-            "created_at": _iso(created_at),
+            "created_at": created_iso,
+            "generated_at": created_iso,
+            "valid_from": created_iso,
             "valid_until": valid_until,
             "planned_departure": _iso(planned_departure),
             "planned_return": _iso(planned_return),
+            "coverage": {**REGION_BBOX, "region": "Maharashtra Coast"},
+            "component_versions": {
+                "routing": "2",
+                "safety_gate": "phase6-v2",
+                "species_catalogue": "1",
+                "predictions": str(predictions.get("model_version") or "unavailable"),
+            },
+            "checksums": checksums,
             "component_expiry": {
                 "warnings": warnings.get("valid_until"),
                 "forecast": forecast.get("valid_until"),
@@ -245,11 +330,12 @@ async def build_package(
         "landing_centre": landing_centre.to_dict(),
         "destination": dest,
         "route": route,
-        "emergency_returns": build_emergency_returns(dest, route),
+        "emergency_returns": emergency_returns,
         "pfz": pfz,
         "warnings": warnings,
         "forecast": forecast,
         "predictions": predictions,
-        "safety_rules": safety_rules(),
-        "offline_assets": offline_assets(),
+        "safety_rules": rules,
+        "species_catalogue": SPECIES_CATALOGUE,
+        "offline_assets": assets,
     }

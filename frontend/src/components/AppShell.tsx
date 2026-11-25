@@ -12,7 +12,7 @@ import { href, type RouteId } from '../lib/router';
 import { useLang } from '../lib/lang';
 import { useData } from '../lib/data';
 import { fmtTime } from '../lib/format';
-import { useOnline } from '../expedition/ExpeditionMode';
+import { useOnline } from '../expedition/components/ExpeditionMode';
 import { Badge, Button } from './ui';
 
 interface NavItem { id: RouteId; icon: LucideIcon; label: [string, string]; mobile?: string }
@@ -51,7 +51,7 @@ const ALL = NAV.flatMap((s) => s.items);
 
 export function AppShell({ route, children }: { route: RouteId; children: ReactNode }) {
   const { mr, toggle, tr } = useLang();
-  const { summary, loading, refresh, lastUpdated, demo } = useData();
+  const { summary, loading, refresh, lastUpdated } = useData();
   const online = useOnline();
   const [drawer, setDrawer] = useState(false);
 
@@ -102,8 +102,7 @@ export function AppShell({ route, children }: { route: RouteId; children: ReactN
           </div>
           <div className="topbar-spacer" />
           {!online && <Badge tone="neutral" icon={WifiOff}>{tr('Offline', 'ऑफलाइन')}</Badge>}
-          {demo && <Badge tone="info">{tr('Demo data', 'डेमो डेटा')}</Badge>}
-          {online && dataStatus && !demo && (
+          {online && dataStatus && (
             <span className="hide-sm text-xs text-muted" title={tr('Last refreshed', 'शेवटचे अद्ययावत')}>
               {tr('Updated', 'अद्ययावत')} {fmtTime(lastUpdated)}
             </span>

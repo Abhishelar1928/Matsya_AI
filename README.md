@@ -109,64 +109,79 @@ docker compose exec db psql -U matsya -d matsya_ai -c "SELECT PostGIS_Version();
 ## Project Structure
 
 ```
-matsya-ai/
+Matsya_AI/
 │
-├── frontend/                   # React + Vite + TypeScript
+├── frontend/                   # React 19 + Vite + TypeScript + Leaflet PWA
 │   ├── src/
-│   │   ├── components/         # Reusable UI components
-│   │   ├── pages/              # Route pages
-│   │   ├── layouts/            # Page layouts
-│   │   ├── map/                # MapLibre GL JS integration
-│   │   ├── services/           # API client layer
-│   │   ├── hooks/              # Custom React hooks
-│   │   ├── types/              # TypeScript type definitions
-│   │   ├── utils/              # Utility functions
-│   │   └── i18n/               # Internationalization (EN + MR)
+│   │   ├── components/         # Shared UI & chart components
+│   │   ├── pages/              # Dashboard pages (Overview, Map, Safety, Weather, Districts, Navigation)
+│   │   ├── expedition/         # Offline Expedition Mode feature module
+│   │   │   ├── components/     # HUD, Plan, Download, Catch Log, Compass, Sync UI
+│   │   │   ├── engine/         # Geodesy, navigation engine, safety evaluator, voyage recorder, simulation
+│   │   │   ├── services/       # IndexedDB, sync, basemap/bathymetry/MPA layers, API
+│   │   │   ├── hooks/          # GPS & device compass hooks
+│   │   │   ├── types/          # Expedition TypeScript contracts
+│   │   │   └── __tests__/      # Expedition unit & integration tests
+│   │   ├── map/                # MarineMap Leaflet layers (activity, PFZ, oceanography, MPA, GEBCO)
+│   │   ├── services/           # Backend API client
+│   │   ├── lib/                # App state, districts, routing, formatting
+│   │   ├── types/              # API TypeScript definitions
+│   │   └── i18n/               # Bilingual dictionaries (EN + MR)
 │   ├── public/
 │   └── package.json
 │
-├── backend/                    # Python FastAPI
+├── backend/                    # Python FastAPI & PostGIS API
 │   ├── app/
-│   │   ├── api/v1/             # API endpoints
-│   │   ├── core/               # Config, database, logging
-│   │   ├── models/             # SQLAlchemy ORM models
+│   │   ├── api/v1/             # REST routers (health, map, pfz, predictions, sources, marine, expedition)
+│   │   ├── core/               # Config, database, logging, canonical landing centres
+│   │   ├── models/             # SQLAlchemy/GeoAlchemy2 ORM models
 │   │   ├── schemas/            # Pydantic schemas
-│   │   ├── services/           # Business logic
-│   │   └── repositories/       # Data access layer
-│   ├── tests/
+│   │   ├── services/           # Ingestion workers, freshness tracker, expedition services
+│   │   └── ml/                 # Frozen Phase 3 XGBoost inference & SafetyGate
+│   ├── alembic/                # Database migrations
+│   ├── static/offline/         # Generated GEBCO contours, VIIRS Chl-a, MUR SST, currents, Malvan MPA
+│   ├── scripts/                # Backend CLI tools (grid, ingestion, predictions, bathymetry)
+│   ├── tests/                  # Pytest suite
 │   └── requirements.txt
 │
-├── data_pipeline/              # Data ingestion workers
-│   ├── incois/                 # INCOIS ocean + PFZ data
-│   ├── imd/                    # IMD weather + warnings
-│   ├── fisheries/              # Maharashtra Fisheries Dept
-│   ├── processing/             # Data transformation
-│   ├── validation/             # Data validation rules
-│   └── scheduler/              # Ingestion scheduling
+├── data_pipeline/              # Live oceanographic & safety data acquisition
+│   ├── oceanography/           # Maharashtra coast oceanography pipeline (GEBCO, VIIRS, MUR SST, U/V, MPA, IMD)
+│   ├── incois/                 # INCOIS PFZ documentation
+│   ├── imd/                    # IMD warning documentation
+│   └── fisheries/              # Fisheries department documentation
 │
-├── ml/                         # Machine Learning
-│   ├── training/               # Model training scripts
-│   ├── inference/              # Prediction serving
-│   ├── features/               # Feature engineering
-│   ├── evaluation/             # Model evaluation
-│   └── models/                 # Serialized models
+├── data/
+│   └── snapshots/              # Baseline & sample API JSON snapshots for offline/local dev
+│
+├── ml/                         # ML training, causal features, baselines & leakage validation
+│   ├── training/
+│   ├── features/
+│   ├── evaluation/
+│   └── models/
 │
 ├── database/
-│   ├── migrations/             # Alembic migrations
-│   └── seeds/                  # Seed data
+│   ├── migrations/
+│   └── seeds/                  # Landing centre seed scripts
 │
-├── docs/                       # Documentation
-│   ├── architecture/
-│   ├── data-sources/
-│   └── api/
+├── scripts/
+│   ├── dev-server/             # Local Node dev API server (local_api_server.js)
+│   └── dev-https/              # Local HTTPS dev cert generator
 │
-├── docker/
-│   ├── backend.Dockerfile
-│   └── frontend.Dockerfile
+├── tools/
+│   ├── diagnostics/            # Source probes, verification & debug scripts (+ captured_samples/)
+│   └── docs-builder/           # Documentation HTML/PDF render helpers
 │
+├── docs/                       # Consolidated documentation
+│   ├── architecture/           # System architecture, folder tree, DB design, Expedition audit
+│   ├── api/                    # REST API specification
+│   ├── guides/                 # Overview, installation, features, testing
+│   ├── science/                # Algorithms, data sources, Phase 3 ML report
+│   ├── security/               # Security analysis
+│   └── reports/                # Readiness & consolidated technical reports
+│
+├── docker/                     # Dockerfiles (backend & frontend)
 ├── docker-compose.yml
 ├── .env.example
-├── .gitignore
 └── README.md
 ```
 
@@ -176,11 +191,20 @@ matsya-ai/
 
 ### Running without Docker
 
-**Backend:**
+**Local Dev Backend (Node, no Postgres setup needed):**
 ```bash
-cd backend
-pip install -r requirements.txt
+node scripts/dev-server/local_api_server.js
+```
+
+**Or Full FastAPI Backend:**
+```bash
+pip install -r backend/requirements.txt
 uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+**Acquire Live Maharashtra Oceanographic Layers:**
+```bash
+node data_pipeline/oceanography/acquire_maharashtra_ocean_data.mjs
 ```
 
 **Frontend:**
@@ -295,9 +319,10 @@ This project **never fabricates official data**. All data source endpoints, API 
 
 ## Geographic Scope
 
-Maharashtra coast only (initial release):
+Maharashtra coast (six coastal districts):
 
 - Palghar
+- Thane
 - Mumbai
 - Raigad
 - Ratnagiri

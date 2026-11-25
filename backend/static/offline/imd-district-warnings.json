@@ -1,0 +1,31 @@
+{
+  "status": "LIVE",
+  "retrieved_at": "2026-11-25T14:12:07.896Z",
+  "districts_monitored": [
+    "Palghar",
+    "Thane",
+    "Mumbai",
+    "Raigad",
+    "Ratnagiri",
+    "Sindhudurg"
+  ],
+  "sources": {
+    "ndma_sachet_cap": {
+      "status": "LIVE",
+      "error": null,
+      "alert_count": 0
+    },
+    "imd_mumbai_fisherman_pdf": {
+      "status": "LIVE",
+      "last_modified": "Wed, 25 Nov 2026 12:22:16 GMT",
+      "url": "https://mausam.imd.gov.in/mumbai/mcdata/fisherman.pdf"
+    },
+    "imd_public_api": {
+      "status": "AUTH_IP_WHITELIST_REQUIRED",
+      "reference": "https://api.imd.gov.in/public/api_reference.html",
+      "note": "api.imd.gov.in requires static public IP whitelisting and IMD API credentials."
+    }
+  },
+  "alerts": [],
+  "imd_api_items": []
+}

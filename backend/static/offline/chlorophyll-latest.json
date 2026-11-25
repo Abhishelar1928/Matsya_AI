@@ -1,0 +1,31 @@
+{
+  "status": "LIVE",
+  "layer": "chlorophyll_a",
+  "dataset_id": "nesdisVHNSQchlaWeekly",
+  "source": "NOAA S-NPP VIIRS Science Quality (CoastWatch ERDDAP)",
+  "observation_timestamp": "2026-10-15T12:00:00Z",
+  "retrieved_at": "2026-11-25T14:21:43.542Z",
+  "units": "mg m^-3",
+  "spatial_resolution_deg": 0.0375,
+  "crs": "EPSG:4326",
+  "width": 86,
+  "height": 150,
+  "bbox": {
+    "min_lat": 15.018749999999997,
+    "max_lat": 20.606250000000003,
+    "min_lon": 71.00625,
+    "max_lon": 74.19375
+  },
+  "scale": {
+    "type": "log10",
+    "min": 0.05,
+    "max": 10
+  },
+  "observed_range": {
+    "min": 0.1542,
+    "max": 71.1875
+  },
+  "valid_pixel_count": 5817,
+  "png_url": "/api/v1/offline-assets/chlorophyll-latest.png",
+  "png_sha256": "b86a3e8fd75505b7f7284cd5e83e148be8015d1c2d5817c4b435291ebf63da40"
+}

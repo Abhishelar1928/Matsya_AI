@@ -1,0 +1,178 @@
+{
+  "generated_at": "2026-11-25T14:09:23.847Z",
+  "crs": "EPSG:4326",
+  "region": "Maharashtra Coast (Palghar, Thane, Mumbai, Raigad, Ratnagiri, Sindhudurg)",
+  "bbox": {
+    "min_lat": 15,
+    "max_lat": 20.6,
+    "min_lon": 71,
+    "max_lon": 74.2
+  },
+  "layers": {
+    "bathymetry": {
+      "status": "LIVE",
+      "source": "GEBCO_2020 Grid via NOAA CoastWatch ERDDAP",
+      "timestamp": "2026-11-25T14:09:28.305Z",
+      "units": "metres (positive depth below sea level)",
+      "resolution": "30 arc-sec (~0.0083 deg)",
+      "feature_count": 15,
+      "levels_m": [
+        10,
+        20,
+        50,
+        100,
+        200
+      ],
+      "contour_counts": {
+        "10m": 1,
+        "20m": 8,
+        "50m": 4,
+        "100m": 1,
+        "200m": 1
+      },
+      "disclaimer": "IMPORTANT: GEBCO is general-purpose bathymetry, not navigation-grade chart data. Never rely on these contours as verified safe navigation depths.",
+      "filename": "bathymetry-contours.geojson",
+      "size_bytes": 41526,
+      "sha256": "dbbdcf2f6db3a2e12be44c42e10839d1f0b5950e82fc5f230ce13dbc84687967",
+      "url": "/api/v1/offline-assets/bathymetry-contours.geojson"
+    },
+    "chlorophyll": {
+      "status": "LIVE",
+      "layer": "chlorophyll_a",
+      "dataset_id": "nesdisVHNSQchlaWeekly",
+      "source": "NOAA S-NPP VIIRS Science Quality (CoastWatch ERDDAP)",
+      "observation_timestamp": "2026-10-15T12:00:00Z",
+      "retrieved_at": "2026-11-25T14:09:32.657Z",
+      "units": "mg m^-3",
+      "spatial_resolution_deg": 0.0375,
+      "crs": "EPSG:4326",
+      "width": 86,
+      "height": 150,
+      "bbox": {
+        "min_lat": 15.018749999999997,
+        "max_lat": 20.606250000000003,
+        "min_lon": 71.00625,
+        "max_lon": 74.19375
+      },
+      "scale": {
+        "type": "log10",
+        "min": 0.05,
+        "max": 10
+      },
+      "observed_range": {
+        "min": 0.1542,
+        "max": 71.1875
+      },
+      "valid_pixel_count": 5817,
+      "png_url": "/api/v1/offline-assets/chlorophyll-latest.png",
+      "png_sha256": "b86a3e8fd75505b7f7284cd5e83e148be8015d1c2d5817c4b435291ebf63da40",
+      "filename": "chlorophyll-latest.json",
+      "size_bytes": 814,
+      "sha256": "2079192d33dbc203c1d990d25c674e4e992f4918b52e3f638077f4d2a2dc507c",
+      "url": "/api/v1/offline-assets/chlorophyll-latest.json"
+    },
+    "sst": {
+      "status": "LIVE",
+      "layer": "sea_surface_temperature",
+      "dataset_id": "jplMURSST41",
+      "source": "NASA JPL MUR SST v4.1 (CoastWatch ERDDAP)",
+      "acquisition_date": "2026-11-24T09:00:00Z",
+      "retrieved_at": "2026-11-25T14:09:36.077Z",
+      "units": "°C",
+      "spatial_resolution": "0.02 deg (~2.2 km, sampled from 0.01 deg L4)",
+      "crs": "EPSG:4326",
+      "width": 161,
+      "height": 281,
+      "bbox": {
+        "min_lat": 15,
+        "max_lat": 20.6,
+        "min_lon": 71,
+        "max_lon": 74.2
+      },
+      "scale": {
+        "min_c": 24,
+        "max_c": 32
+      },
+      "observed_range": {
+        "min_c": 26.54,
+        "max_c": 29.82
+      },
+      "valid_pixel_count": 30492,
+      "png_url": "/api/v1/offline-assets/sst-latest.png",
+      "png_sha256": "a591f7fbaeafff5b5bb9100d8533c8bba8b3ade9a89b9c57b04eefc40f42c4d5",
+      "filename": "sst-latest.json",
+      "size_bytes": 766,
+      "sha256": "19f697f5fa4d9d2624d1f8caa58ea87e75c4e5c87550399c291410b55a2c4950",
+      "url": "/api/v1/offline-assets/sst-latest.json"
+    },
+    "ocean_currents": {
+      "status": "LIVE",
+      "source": "Open-Meteo Marine API (Copernicus/ECMWF-derived)",
+      "timestamp": "2026-11-25T14:00:00Z",
+      "units": "m/s (U/V components), knots",
+      "resolution": "0.5 deg grid (~8 km native model)",
+      "feature_count": 47,
+      "disclaimer": "Coarse modeled currents for regional situational drift estimation only; coastal tidal jets and harbour currents are not resolved.",
+      "filename": "ocean-currents-latest.geojson",
+      "size_bytes": 12678,
+      "sha256": "15542dc5daba60a22a4e063310dc1c0fba9bbf8314baf6ab55363c54f759b265",
+      "url": "/api/v1/offline-assets/ocean-currents-latest.geojson"
+    },
+    "wave_swell": {
+      "status": "LIVE",
+      "source": "Open-Meteo Marine & Forecast API",
+      "timestamp": "2026-11-25T14:00:00Z",
+      "units": "m, s, km/h",
+      "resolution": "0.5 deg grid",
+      "feature_count": 47,
+      "filename": "wave-swell-latest.geojson",
+      "size_bytes": 16379,
+      "sha256": "12c1b939e0759f23068d80c18f6332e3e2d16fc6ec877ad90f672b5dfdb9c350",
+      "url": "/api/v1/offline-assets/wave-swell-latest.geojson"
+    },
+    "marine_protected_areas": {
+      "status": "LIVE",
+      "source": "OpenStreetMap / Nominatim (WDPA token not configured for direct Protected Planet API)",
+      "timestamp": "2026-11-25T14:10:12.732Z",
+      "feature_count": 1,
+      "disclaimer": "Boundary polygons shown are from verified public OSM mapping; verify official core/buffer zone notifications with Maharashtra Forest Department.",
+      "filename": "marine-protected-areas.geojson",
+      "size_bytes": 996,
+      "sha256": "acb2d7186e9ea6df9b0bc0ed519e87e6e19fefde2e9d6c4683c15fa81902e663",
+      "url": "/api/v1/offline-assets/marine-protected-areas.geojson"
+    },
+    "offshore_installations": {
+      "status": "UNAVAILABLE",
+      "source": "OpenStreetMap / OpenSeaMap (official ONGC/DGH shapefile not publicly open)",
+      "timestamp": "2026-11-25T14:12:07.880Z",
+      "feature_count": 0,
+      "disclaimer": "Only verified public OpenStreetMap/OpenSeaMap offshore platform coordinates are included. Absence of markers does NOT guarantee absence of offshore oil/gas installations or safety zones.",
+      "filename": "offshore-installations.geojson",
+      "size_bytes": 509,
+      "sha256": "3161eb38edb8d0d5fafc8fbdaffa149265dca191f7b8ad4d602ddd8a4e68d4ed",
+      "url": "/api/v1/offline-assets/offshore-installations.geojson"
+    },
+    "shipping_lanes": {
+      "status": "UNAVAILABLE",
+      "source": "OpenStreetMap / OpenSeaMap (official NHO ENC TSS charts are licensed)",
+      "timestamp": "2026-11-25T14:12:07.880Z",
+      "feature_count": 0,
+      "disclaimer": "Community OpenSeaMap seamark geometries only; NOT an official hydrographic chart. Live AIS traffic is not treated as an official shipping chart.",
+      "filename": "shipping-lanes.geojson",
+      "size_bytes": 469,
+      "sha256": "5c00bd8c0313c0b7cee72d5986d1069bebb2d11e4a1d87e59cdb0221559a43d6",
+      "url": "/api/v1/offline-assets/shipping-lanes.geojson"
+    },
+    "district_warnings": {
+      "status": "LIVE",
+      "source": "NDMA SACHET CAP + IMD Mumbai",
+      "timestamp": "2026-11-25T14:12:07.896Z",
+      "alert_count": 0,
+      "imd_api_status": "AUTH_IP_WHITELIST_REQUIRED",
+      "filename": "imd-district-warnings.json",
+      "size_bytes": 781,
+      "sha256": "7dc730e145b2dc2e0127c970498fb8f877dab632f072ab1f97d6d90df003e2fc",
+      "url": "/api/v1/offline-assets/imd-district-warnings.json"
+    }
+  }
+}

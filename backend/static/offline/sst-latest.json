@@ -1,0 +1,30 @@
+{
+  "status": "LIVE",
+  "layer": "sea_surface_temperature",
+  "dataset_id": "jplMURSST41",
+  "source": "NASA JPL MUR SST v4.1 (CoastWatch ERDDAP)",
+  "acquisition_date": "2026-11-24T09:00:00Z",
+  "retrieved_at": "2026-11-25T14:21:47.586Z",
+  "units": "°C",
+  "spatial_resolution": "0.02 deg (~2.2 km, sampled from 0.01 deg L4)",
+  "crs": "EPSG:4326",
+  "width": 161,
+  "height": 281,
+  "bbox": {
+    "min_lat": 15,
+    "max_lat": 20.6,
+    "min_lon": 71,
+    "max_lon": 74.2
+  },
+  "scale": {
+    "min_c": 24,
+    "max_c": 32
+  },
+  "observed_range": {
+    "min_c": 26.54,
+    "max_c": 29.82
+  },
+  "valid_pixel_count": 30492,
+  "png_url": "/api/v1/offline-assets/sst-latest.png",
+  "png_sha256": "a591f7fbaeafff5b5bb9100d8533c8bba8b3ade9a89b9c57b04eefc40f42c4d5"
+}

@@ -27,6 +27,7 @@ htmlcov/
 # Node / Frontend
 node_modules/
 frontend/dist/
+frontend/dev-dist/
 frontend/build/
 *.tsbuildinfo
 .npm
@@ -62,3 +63,9 @@ logs/
 
 # OS
 desktop.ini
+
+# Raw GFW bulk downloads (multi-GB CSV/ZIP archives)
+data/gfw_bulk/
+
+# Session cookies
+cookies.txt

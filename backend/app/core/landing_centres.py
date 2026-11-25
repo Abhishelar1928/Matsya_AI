@@ -4,7 +4,7 @@ MatsyaAI Maharashtra — Canonical Landing Centre Registry.
 Single source of truth for landing centre locations used by the map UI and
 Offline Expedition Mode (route start points, emergency return destinations).
 
-Coordinates come from database/seeds/landing_centres_mock.py and are flagged
+Coordinates come from database/seeds/landing_centres_seed.py and are flagged
 ``verified=False`` until checked against Maharashtra Fisheries Department data.
 
 NOTE: backend/app/ml/dataset_builder.py keeps its own ``_LANDING_CENTRES`` list.
@@ -18,7 +18,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from typing import Dict, List, Optional
 
-COORDINATE_SOURCE = "database/seeds/landing_centres_mock.py (unverified)"
+COORDINATE_SOURCE = "database/seeds/landing_centres_seed.py (unverified)"
 
 
 @dataclass(frozen=True)
@@ -39,6 +39,7 @@ class LandingCentreInfo:
 LANDING_CENTRES: List[LandingCentreInfo] = [
     LandingCentreInfo("satpati", "Satpati", "सातपाटी", "Palghar", 19.7258, 72.7058),
     LandingCentreInfo("arnala", "Arnala", "अर्नाळा", "Palghar", 19.4589, 72.7483),
+    LandingCentreInfo("uttan", "Uttan / Bhayandar", "उत्तन / भाईंदर", "Thane", 19.2708, 72.7858),
     LandingCentreInfo("versova", "Versova", "वर्सोवा", "Mumbai", 19.1334, 72.8146),
     LandingCentreInfo("sassoon_dock", "Sassoon Dock", "ससून डॉक", "Mumbai", 18.9172, 72.8258),
     LandingCentreInfo("alibag", "Alibag", "अलिबाग", "Raigad", 18.6416, 72.8722),

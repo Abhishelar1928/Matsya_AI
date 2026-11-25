@@ -1,7 +1,7 @@
 /** Navigation — route planning and the Offline Expedition workflow. */
 
 import { PageHeader } from '../components/ui';
-import { ExpeditionMode } from '../expedition/ExpeditionMode';
+import { ExpeditionMode } from '../expedition/components/ExpeditionMode';
 import { useData } from '../lib/data';
 import { useLang } from '../lib/lang';
 import type { Location } from '../lib/router';
@@ -12,8 +12,11 @@ export function Navigation({ loc }: { loc: Location }) {
   const pfzParam = loc.params.get('pfz');
   const lat = Number(loc.params.get('lat'));
   const lon = Number(loc.params.get('lon'));
+  const olat = Number(loc.params.get('olat'));
+  const olon = Number(loc.params.get('olon'));
   const pfzIndex = pfzParam !== null && Number.isInteger(Number(pfzParam)) ? Number(pfzParam) : null;
   const destination = lat && lon && Number.isFinite(lat) && Number.isFinite(lon) ? { latitude: lat, longitude: lon } : null;
+  const origin = olat && olon && Number.isFinite(olat) && Number.isFinite(olon) ? { latitude: olat, longitude: olon } : null;
 
   return (
     <div>
@@ -25,11 +28,12 @@ export function Navigation({ loc }: { loc: Location }) {
         )}
       />
       <ExpeditionMode
-        key={`${pfzIndex}-${destination?.latitude}-${destination?.longitude}`}
+        key={`${pfzIndex}-${destination?.latitude}-${destination?.longitude}-${origin?.latitude}-${origin?.longitude}`}
         isMarathi={mr}
         pfz={summary?.pfz_advisory ?? null}
         initialPfzIndex={pfzIndex}
         initialDestination={destination}
+        initialOrigin={origin}
       />
     </div>
   );

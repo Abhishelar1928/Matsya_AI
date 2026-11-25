@@ -10,6 +10,7 @@ reported as UNAVAILABLE.
 
 from __future__ import annotations
 
+import json
 import time
 from typing import Any, Dict, List, Optional
 
@@ -20,12 +21,13 @@ from backend.app.core.database import get_db
 from backend.app.core.landing_centres import LANDING_CENTRES
 from backend.app.ml.config import SAFETY_WAVE_HEIGHT_THRESHOLD, SAFETY_WIND_SPEED_THRESHOLD
 from backend.app.services.expedition.forecast import fetch_route_forecast
-from backend.app.services.expedition.package_builder import get_active_warnings
+from backend.app.services.expedition.package_builder import OFFLINE_ASSETS_DIR, get_active_warnings
 from backend.app.services.expedition.routing import is_on_land
+from backend.app.services.ingestion.imd_marine_provider import fetch_district_warnings_live
 
 router = APIRouter(prefix="/marine", tags=["Marine conditions"])
 
-DISTRICTS = ["Palghar", "Mumbai", "Raigad", "Ratnagiri", "Sindhudurg"]
+DISTRICTS = ["Palghar", "Thane", "Mumbai", "Raigad", "Ratnagiri", "Sindhudurg"]
 FORECAST_TTL_SECONDS = 30 * 60
 _forecast_cache: Dict[str, Any] = {"at": 0.0, "data": None}
 
@@ -85,3 +87,30 @@ async def marine_forecast(refresh: Optional[bool] = False) -> Dict[str, Any]:
     if forecast["status"] != "UNAVAILABLE":
         _forecast_cache.update(at=now, data=data)
     return data
+
+
+@router.get("/ocean-layers")
+async def marine_ocean_layers() -> Dict[str, Any]:
+    """Return metadata and URLs for acquired Maharashtra oceanographic & hazard layers."""
+    manifest_path = OFFLINE_ASSETS_DIR / "ocean-layers-manifest.json"
+    if not manifest_path.exists():
+        return {
+            "status": "UNAVAILABLE",
+            "generated_at": None,
+            "crs": "EPSG:4326",
+            "layers": {},
+            "note": "Run data_pipeline/oceanography/acquire_maharashtra_ocean_data.mjs to populate oceanographic layers.",
+        }
+    return json.loads(manifest_path.read_text(encoding="utf-8"))
+
+
+@router.get("/district-warnings")
+async def marine_district_warnings() -> Dict[str, Any]:
+    """Return live coastal district warnings from NDMA SACHET CAP and IMD (when configured)."""
+    cached_path = OFFLINE_ASSETS_DIR / "imd-district-warnings.json"
+    live = await fetch_district_warnings_live(DISTRICTS)
+    if live.get("status") == "LIVE":
+        return live
+    if cached_path.exists():
+        return json.loads(cached_path.read_text(encoding="utf-8"))
+    return live

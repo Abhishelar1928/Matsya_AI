@@ -15,7 +15,10 @@ CRITICAL RULES:
 import logging
 import json
 import math
-from global_land_mask import globe
+try:
+    from global_land_mask import globe
+except ImportError:
+    globe = None
 import time
 import urllib.request
 import urllib.error
@@ -35,7 +38,6 @@ from backend.app.ml.config import (
     HISTORICAL_CACHE_PATH, ENV_RAW_CACHE_DIR, DATA_DIR,
     ALL_FEATURE_COLUMNS, FISHING_HOURS_COLUMN,
 )
-from backend.app.services.ingestion.gfw_provider import GfwFishingEffortProvider
 
 logger = logging.getLogger(__name__)
 
@@ -78,6 +80,7 @@ class HistoricalDatasetBuilder:
 
     def __init__(self, start_date: str = None, end_date: str = None,
                  force_refresh: bool = False):
+        from backend.app.services.ingestion.gfw_provider import GfwFishingEffortProvider
         self.start_date = start_date or GFW_START_DATE
         self.end_date = end_date or GFW_END_DATE
         self.force_refresh = force_refresh
@@ -177,8 +180,11 @@ class HistoricalDatasetBuilder:
                     (lat, lon + GRID_RESOLUTION),
                     (lat + GRID_RESOLUTION, lon + GRID_RESOLUTION)
                 ]
-                # is_marine if any point is ocean
-                is_marine = any(globe.is_ocean(p[0], p[1]) for p in points)
+                # is_marine if any point is ocean (fallback longitude shelf filter when global_land_mask missing)
+                if globe is not None:
+                    is_marine = any(globe.is_ocean(p[0], p[1]) for p in points)
+                else:
+                    is_marine = centroid_lon <= 73.25 or centroid_lat <= 16.75
                 
                 if is_marine:
                     cell_id = f"cell_{lat:.2f}_{lon:.2f}_{GRID_RESOLUTION}"

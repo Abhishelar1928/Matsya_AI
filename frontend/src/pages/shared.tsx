@@ -35,7 +35,7 @@ export function SafetyCallout({ withLink = true }: { withLink?: boolean }) {
 }
 
 export function PageState({ children }: { children: ReactNode }) {
-  const { summary, loading, error, refresh, setDemo } = useData();
+  const { summary, loading, error, refresh } = useData();
   const { tr } = useLang();
   if (summary) return <>{children}</>;
   if (loading) {
@@ -55,7 +55,6 @@ export function PageState({ children }: { children: ReactNode }) {
         <div>{error}</div>
         <div className="page-actions" style={{ marginTop: 8 }}>
           <Button variant="primary" icon={RefreshCw} onClick={refresh}>{tr('Try again', 'पुन्हा प्रयत्न करा')}</Button>
-          <Button onClick={() => setDemo(true)}>{tr('Load demo data', 'डेमो डेटा लोड करा')}</Button>
         </div>
       </div>
     </Card>

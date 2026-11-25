@@ -1,6 +1,6 @@
 /** Full marine map. Supports #/map?lat=..&lon=.. focus links from other pages. */
 
-import { Segmented, PageHeader } from '../components/ui';
+import { PageHeader } from '../components/ui';
 import { MarineMap } from '../map/MarineMap';
 import { useData } from '../lib/data';
 import { useLang } from '../lib/lang';
@@ -12,7 +12,7 @@ export function MapPage({ loc }: { loc: Location }) {
 }
 
 function Content({ loc }: { loc: Location }) {
-  const { summary, demo, setDemo } = useData();
+  const { summary, oceanLayers } = useData();
   const { mr, tr } = useLang();
   const lat = Number(loc.params.get('lat'));
   const lon = Number(loc.params.get('lon'));
@@ -22,18 +22,10 @@ function Content({ loc }: { loc: Location }) {
     <div className="stack">
       <PageHeader
         title={tr('Marine map', 'सागरी नकाशा')}
-        description={tr('Select a grid cell or PFZ point for details', 'तपशीलासाठी ग्रिड क्षेत्र किंवा PFZ बिंदू निवडा')}
-        actions={
-          <Segmented<'live' | 'demo'>
-            label={tr('Data mode', 'डेटा मोड')}
-            value={demo ? 'demo' : 'live'}
-            onChange={(v) => setDemo(v === 'demo')}
-            options={[{ value: 'live', label: tr('Live', 'थेट') }, { value: 'demo', label: tr('Demo', 'डेमो') }]}
-          />
-        }
+        description={tr('Select a grid cell or PFZ point for details, or toggle oceanographic layers', 'तपशीलासाठी ग्रिड क्षेत्र किंवा PFZ बिंदू निवडा, किंवा समुद्री स्तर पहा')}
       />
       <SafetyCallout />
-      <MarineMap data={summary!} mr={mr} height="max(440px, calc(100vh - 300px))" focus={focus} />
+      <MarineMap data={summary!} oceanLayers={oceanLayers} mr={mr} height="max(440px, calc(100vh - 300px))" focus={focus} />
     </div>
   );
 }

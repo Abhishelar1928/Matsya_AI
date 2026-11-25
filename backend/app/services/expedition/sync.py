@@ -55,6 +55,9 @@ async def apply_sync(
         "geom": _point_wkt(t["latitude"], t["longitude"]),
         "speed_mps": t.get("speed_mps"),
         "heading_deg": t.get("heading_deg"),
+        "cog_deg": t.get("cog_deg"),
+        "compass_heading_deg": t.get("compass_heading_deg"),
+        "xte_km": t.get("xte_km"),
         "accuracy_m": t.get("accuracy_m"),
         "synced_at": now,
     } for t in track_points]
@@ -67,7 +70,11 @@ async def apply_sync(
         "longitude": c.get("longitude"),
         "geom": _point_wkt(c.get("latitude"), c.get("longitude")),
         "species": c["species"],
+        "species_id": c.get("species_id"),
         "weight_kg": c.get("weight_kg"),
+        "quantity": c.get("quantity"),
+        "fishing_duration_min": c.get("fishing_duration_min"),
+        "estimated_value_inr": c.get("estimated_value_inr"),
         "notes": c.get("notes"),
         "synced_at": now,
     } for c in catches]

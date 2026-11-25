@@ -6,7 +6,13 @@
  */
 
 import type { HealthResponse } from '../types/health';
-import type { MapSummaryResponse, MarineForecast, MarineWarnings } from '../types/map';
+import type {
+  DistrictWarningsResponse,
+  MapSummaryResponse,
+  MarineForecast,
+  MarineWarnings,
+  OceanLayersManifest,
+} from '../types/map';
 
 const API_BASE = '/api/v1';
 
@@ -26,8 +32,8 @@ export async function fetchHealth(): Promise<HealthResponse> {
 /**
  * Fetch consolidated map summary payload from the backend.
  */
-export async function fetchMapSummary(demo: boolean = false): Promise<MapSummaryResponse> {
-  const url = `${API_BASE}/map/summary${demo ? '?demo=true' : ''}`;
+export async function fetchMapSummary(): Promise<MapSummaryResponse> {
+  const url = `${API_BASE}/map/summary`;
   const response = await fetch(url);
 
   if (!response.ok) {
@@ -53,4 +59,22 @@ export async function fetchMarineForecast(): Promise<MarineForecast> {
   const response = await fetch(`${API_BASE}/marine/forecast`);
   if (!response.ok) throw new Error(`Marine forecast failed: ${response.status}`);
   return response.json() as Promise<MarineForecast>;
+}
+
+/**
+ * Acquired oceanographic, bathymetric, MPA, and hazard layers manifest (EPSG:4326).
+ */
+export async function fetchOceanLayers(): Promise<OceanLayersManifest> {
+  const response = await fetch(`${API_BASE}/marine/ocean-layers`);
+  if (!response.ok) throw new Error(`Ocean layers failed: ${response.status}`);
+  return response.json() as Promise<OceanLayersManifest>;
+}
+
+/**
+ * Live district weather warnings from NDMA SACHET CAP and IMD (when configured).
+ */
+export async function fetchDistrictWarnings(): Promise<DistrictWarningsResponse> {
+  const response = await fetch(`${API_BASE}/marine/district-warnings`);
+  if (!response.ok) throw new Error(`District warnings failed: ${response.status}`);
+  return response.json() as Promise<DistrictWarningsResponse>;
 }

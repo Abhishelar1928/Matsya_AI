@@ -97,6 +97,9 @@ const mr: Record<string, string> = {
   exp_no_package: 'या उपकरणावर मोहीम पॅकेज नाही. सिग्नल असताना नियोजन करा.',
   exp_waypoint: 'मार्गबिंदू',
   exp_track_points: 'मार्ग बिंदू',
+  exp_night_mode: 'नाइट मोड',
+  exp_emergency: 'आपत्कालीन / MOB',
+  exp_black_box: 'प्रवास ब्लॅक बॉक्स',
 };
 
 export default mr;

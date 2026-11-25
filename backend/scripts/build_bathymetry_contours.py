@@ -25,8 +25,12 @@ from typing import Dict, List, Tuple
 
 import numpy as np
 
-DEFAULT_LEVELS = [10, 20, 30, 50, 100, 200]
+DEFAULT_LEVELS = [10, 20, 50, 100, 200]
 OUT_PATH = Path(__file__).resolve().parents[1] / "static" / "offline" / "bathymetry-contours.geojson"
+ERDDAP_GEBCO_CSV = (
+    "https://coastwatch.pfeg.noaa.gov/erddap/griddap/GEBCO_2020.csv"
+    "?elevation[({min_lat}):{stride}:({max_lat})][({min_lon}):{stride}:({max_lon})]"
+)
 
 
 # ---------------------------------------------------------------------------
@@ -150,18 +154,62 @@ def simplify(line: List[Tuple[float, float]], tol: float) -> List[Tuple[float, f
 
 
 # ---------------------------------------------------------------------------
+def read_tif(path: Path) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    try:
+        import rasterio  # type: ignore
+    except ImportError:
+        sys.exit("GeoTIFF input needs `pip install rasterio`, or download as Esri ASCII / netCDF.")
+    with rasterio.open(path) as src:
+        z = src.read(1).astype(float)
+        if src.nodata is not None:
+            z = np.where(z == src.nodata, np.nan, z)
+        transform = src.transform
+        lons = transform.c + transform.a * (np.arange(src.width) + 0.5)
+        lats = transform.f + transform.e * (np.arange(src.height) + 0.5)
+        if lats[0] > lats[-1]:
+            z, lats = z[::-1], lats[::-1]
+        return z, lons, lats
+
+
+def fetch_erddap_gebco(min_lat: float, max_lat: float, min_lon: float, max_lon: float, stride: int = 2) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    import urllib.request
+    url = ERDDAP_GEBCO_CSV.format(min_lat=min_lat, max_lat=max_lat, min_lon=min_lon, max_lon=max_lon, stride=stride)
+    raw = urllib.request.urlopen(url, timeout=60).read().decode("utf-8").splitlines()[2:]
+    pts = [line.split(",") for line in raw if line.strip()]
+    lats = np.array(sorted({float(p[0]) for p in pts}))
+    lons = np.array(sorted({float(p[1]) for p in pts}))
+    lat_i = {v: i for i, v in enumerate(lats)}
+    lon_i = {v: i for i, v in enumerate(lons)}
+    z = np.full((len(lats), len(lons)), np.nan, dtype=float)
+    for la, lo, el in pts:
+        z[lat_i[float(la)], lon_i[float(lo)]] = float(el)
+    return z, lons, lats
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("grid", type=Path, help="GEBCO subset (.asc or .nc)")
+    ap.add_argument("grid", type=Path, nargs="?", help="GEBCO subset (.asc, .nc, or .tif)")
+    ap.add_argument("--fetch-erddap", action="store_true", help="Fetch Maharashtra subset directly from CoastWatch ERDDAP GEBCO_2020")
+    ap.add_argument("--bbox", type=float, nargs=4, default=[15.0, 20.6, 71.0, 74.2], metavar=("MIN_LAT", "MAX_LAT", "MIN_LON", "MAX_LON"))
+    ap.add_argument("--stride", type=int, default=2)
     ap.add_argument("--levels", type=float, nargs="+", default=DEFAULT_LEVELS, help="depths in metres")
     ap.add_argument("--out", type=Path, default=OUT_PATH)
     ap.add_argument("--tolerance", type=float, default=0.002, help="simplification tolerance in degrees")
     ap.add_argument("--min-points", type=int, default=4, help="drop contours shorter than this")
     args = ap.parse_args()
 
-    if not args.grid.exists():
-        sys.exit(f"Input not found: {args.grid}")
-    z, lons, lats = read_nc(args.grid) if args.grid.suffix.lower() == ".nc" else read_asc(args.grid)
+    if args.fetch_erddap:
+        z, lons, lats = fetch_erddap_gebco(*args.bbox, stride=args.stride)
+    else:
+        if not args.grid or not args.grid.exists():
+            sys.exit(f"Input not found: {args.grid}")
+        suf = args.grid.suffix.lower()
+        if suf == ".nc":
+            z, lons, lats = read_nc(args.grid)
+        elif suf in (".tif", ".tiff"):
+            z, lons, lats = read_tif(args.grid)
+        else:
+            z, lons, lats = read_asc(args.grid)
     print(f"Grid {z.shape[1]}x{z.shape[0]}  lon {lons[0]:.3f}..{lons[-1]:.3f}  lat {lats[0]:.3f}..{lats[-1]:.3f}  "
           f"elev {np.nanmin(z):.0f}..{np.nanmax(z):.0f} m")
 

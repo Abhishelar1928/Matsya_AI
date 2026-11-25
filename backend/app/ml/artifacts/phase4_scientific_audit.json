@@ -1,0 +1,367 @@
+{
+  "run_id": "p4_20261125T213628Z_0453e792",
+  "experiment_a_independent_nov_2024": {
+    "anchor_date": "2023-11-25",
+    "seasonal_threshold": 0.12,
+    "tiers": [
+      {
+        "tier": "HIGH",
+        "count": 23,
+        "mean_predicted_p": 0.1648,
+        "actual_daily_rate_nov26_dec10": 0.1797,
+        "cells_fished_nov26_dec10": "16/23",
+        "actual_daily_rate_nov15_dec05": 0.1822,
+        "cells_fished_nov15_dec05": "19/23"
+      },
+      {
+        "tier": "MOD",
+        "count": 36,
+        "mean_predicted_p": 0.089,
+        "actual_daily_rate_nov26_dec10": 0.0519,
+        "cells_fished_nov26_dec10": "14/36",
+        "actual_daily_rate_nov15_dec05": 0.0899,
+        "cells_fished_nov15_dec05": "17/36"
+      },
+      {
+        "tier": "LIGHT",
+        "count": 21,
+        "mean_predicted_p": 0.0492,
+        "actual_daily_rate_nov26_dec10": 0.0127,
+        "cells_fished_nov26_dec10": "3/21",
+        "actual_daily_rate_nov15_dec05": 0.0227,
+        "cells_fished_nov15_dec05": "5/21"
+      },
+      {
+        "tier": "VLOW",
+        "count": 17,
+        "mean_predicted_p": 0.0126,
+        "actual_daily_rate_nov26_dec10": 0.0,
+        "cells_fished_nov26_dec10": "0/17",
+        "actual_daily_rate_nov15_dec05": 0.0,
+        "cells_fished_nov15_dec05": "0/17"
+      }
+    ],
+    "spearman_nov26_dec10": 0.571,
+    "spearman_nov15_dec05": 0.598,
+    "share_hours_nov26_dec10_in_high": 0.7651,
+    "share_hours_nov15_dec05_in_high": 0.6347
+  },
+  "experiment_b_calibration_reliability": {
+    "daily_test_2024": {
+      "brier": 0.03868,
+      "pr_auc": 0.5444,
+      "reliability": {
+        "ece": 0.006678,
+        "bins": [
+          {
+            "bin_low": 0.0,
+            "bin_high": 0.05,
+            "count": 28125,
+            "mean_predicted": 0.011545,
+            "observed_rate": 0.010631,
+            "gap": 0.000914
+          },
+          {
+            "bin_low": 0.05,
+            "bin_high": 0.15,
+            "count": 3882,
+            "mean_predicted": 0.083558,
+            "observed_rate": 0.110768,
+            "gap": -0.02721
+          },
+          {
+            "bin_low": 0.15,
+            "bin_high": 0.3,
+            "count": 1548,
+            "mean_predicted": 0.212229,
+            "observed_rate": 0.251292,
+            "gap": -0.039063
+          },
+          {
+            "bin_low": 0.3,
+            "bin_high": 0.44,
+            "count": 643,
+            "mean_predicted": 0.363328,
+            "observed_rate": 0.398134,
+            "gap": -0.034806
+          },
+          {
+            "bin_low": 0.44,
+            "bin_high": 0.6,
+            "count": 533,
+            "mean_predicted": 0.519276,
+            "observed_rate": 0.534709,
+            "gap": -0.015433
+          },
+          {
+            "bin_low": 0.6,
+            "bin_high": 0.8,
+            "count": 477,
+            "mean_predicted": 0.683128,
+            "observed_rate": 0.691824,
+            "gap": -0.008696
+          },
+          {
+            "bin_low": 0.8,
+            "bin_high": 1.0,
+            "count": 197,
+            "mean_predicted": 0.843327,
+            "observed_rate": 0.893401,
+            "gap": -0.050074
+          }
+        ]
+      }
+    },
+    "seasonal_climatology_2024_with_daily_calibrator": {
+      "brier": 0.06382,
+      "pr_auc": 0.2048,
+      "reliability": {
+        "ece": 0.045887,
+        "bins": [
+          {
+            "bin_low": 0.0,
+            "bin_high": 0.05,
+            "count": 21346,
+            "mean_predicted": 0.0103,
+            "observed_rate": 0.015132,
+            "gap": -0.004832
+          },
+          {
+            "bin_low": 0.05,
+            "bin_high": 0.15,
+            "count": 6446,
+            "mean_predicted": 0.088626,
+            "observed_rate": 0.089668,
+            "gap": -0.001042
+          },
+          {
+            "bin_low": 0.15,
+            "bin_high": 0.3,
+            "count": 3498,
+            "mean_predicted": 0.223504,
+            "observed_rate": 0.114637,
+            "gap": 0.108867
+          },
+          {
+            "bin_low": 0.3,
+            "bin_high": 0.44,
+            "count": 1968,
+            "mean_predicted": 0.360001,
+            "observed_rate": 0.166667,
+            "gap": 0.193334
+          },
+          {
+            "bin_low": 0.44,
+            "bin_high": 0.6,
+            "count": 1155,
+            "mean_predicted": 0.518535,
+            "observed_rate": 0.213853,
+            "gap": 0.304682
+          },
+          {
+            "bin_low": 0.6,
+            "bin_high": 0.8,
+            "count": 870,
+            "mean_predicted": 0.675285,
+            "observed_rate": 0.281609,
+            "gap": 0.393676
+          },
+          {
+            "bin_low": 0.8,
+            "bin_high": 1.0,
+            "count": 122,
+            "mean_predicted": 0.836515,
+            "observed_rate": 0.352459,
+            "gap": 0.484056
+          }
+        ]
+      }
+    },
+    "seasonal_climatology_2024_with_seasonal_calibrator": {
+      "brier": 0.05291,
+      "pr_auc": 0.2048,
+      "reliability": {
+        "ece": 0.010941,
+        "bins": [
+          {
+            "bin_low": 0.0,
+            "bin_high": 0.05,
+            "count": 22883,
+            "mean_predicted": 0.017427,
+            "observed_rate": 0.01984,
+            "gap": -0.002413
+          },
+          {
+            "bin_low": 0.05,
+            "bin_high": 0.15,
+            "count": 10129,
+            "mean_predicted": 0.087442,
+            "observed_rate": 0.111265,
+            "gap": -0.023823
+          },
+          {
+            "bin_low": 0.15,
+            "bin_high": 0.3,
+            "count": 2267,
+            "mean_predicted": 0.199228,
+            "observed_rate": 0.237759,
+            "gap": -0.038532
+          },
+          {
+            "bin_low": 0.3,
+            "bin_high": 0.44,
+            "count": 126,
+            "mean_predicted": 0.329519,
+            "observed_rate": 0.357143,
+            "gap": -0.027624
+          }
+        ]
+      }
+    }
+  },
+  "experiment_c_ocean_ablation_and_permutation": {
+    "ablations": [
+      {
+        "model": "AIS_Plus_GeoCal_Only",
+        "n_features": 26,
+        "val_pr_auc": 0.4325,
+        "val_roc_auc": 0.9135,
+        "val_f1": 0.4649,
+        "test_pr_auc": 0.5499,
+        "test_roc_auc": 0.9251,
+        "test_f1": 0.5269
+      },
+      {
+        "model": "Ocean_Physical_No_ISNA_No_AIS",
+        "n_features": 26,
+        "val_pr_auc": 0.1562,
+        "val_roc_auc": 0.8209,
+        "val_f1": 0.2258,
+        "test_pr_auc": 0.1984,
+        "test_roc_auc": 0.8164,
+        "test_f1": 0.2718
+      },
+      {
+        "model": "Ocean_Clean_With_CloudLand_ISNA",
+        "n_features": 32,
+        "val_pr_auc": 0.1558,
+        "val_roc_auc": 0.819,
+        "val_f1": 0.2181,
+        "test_pr_auc": 0.197,
+        "test_roc_auc": 0.8155,
+        "test_f1": 0.274
+      },
+      {
+        "model": "Combined_AIS_Plus_Ocean_No_ISNA",
+        "n_features": 43,
+        "val_pr_auc": 0.4303,
+        "val_roc_auc": 0.9143,
+        "val_f1": 0.464,
+        "test_pr_auc": 0.5463,
+        "test_roc_auc": 0.9258,
+        "test_f1": 0.5276
+      }
+    ],
+    "val_baseline_pr_auc": 0.4302,
+    "permutation_importance_val": [
+      {
+        "group": "self_ais_history",
+        "n_cols": 10,
+        "val_pr_auc_drop_mean": 0.29629,
+        "val_pr_auc_drop_std": 0.00161
+      },
+      {
+        "group": "spatial_neighbor_ais",
+        "n_cols": 7,
+        "val_pr_auc_drop_mean": 0.0296,
+        "val_pr_auc_drop_std": 0.00219
+      },
+      {
+        "group": "calendar_and_geo",
+        "n_cols": 9,
+        "val_pr_auc_drop_mean": 0.02708,
+        "val_pr_auc_drop_std": 0.00317
+      },
+      {
+        "group": "waves_wind_currents",
+        "n_cols": 9,
+        "val_pr_auc_drop_mean": 0.00885,
+        "val_pr_auc_drop_std": 0.00093
+      },
+      {
+        "group": "bathymetry_depth_slope",
+        "n_cols": 2,
+        "val_pr_auc_drop_mean": 0.00522,
+        "val_pr_auc_drop_std": 0.00073
+      },
+      {
+        "group": "stage1_habitat_score",
+        "n_cols": 1,
+        "val_pr_auc_drop_mean": 0.00225,
+        "val_pr_auc_drop_std": 0.0006
+      },
+      {
+        "group": "sst_and_thermal_front",
+        "n_cols": 4,
+        "val_pr_auc_drop_mean": 0.0012,
+        "val_pr_auc_drop_std": 0.00094
+      },
+      {
+        "group": "chlorophyll_a_blooms",
+        "n_cols": 7,
+        "val_pr_auc_drop_mean": 0.00116,
+        "val_pr_auc_drop_std": 0.00047
+      }
+    ]
+  },
+  "experiment_d_spatial_block_cv": {
+    "leave_one_district_band_out_2020_2023": [
+      {
+        "held_out_block": "Sindhudurg_15.5_16.5",
+        "n_cells": 27,
+        "prevalence": 0.1257,
+        "stage1_ocean_only_pr_auc": 0.2491,
+        "stage1_ocean_only_roc_auc": 0.7571,
+        "spatio_ocean_pr_auc": 0.6581,
+        "spatio_ocean_roc_auc": 0.9124
+      },
+      {
+        "held_out_block": "Ratnagiri_16.5_17.5",
+        "n_cells": 23,
+        "prevalence": 0.0918,
+        "stage1_ocean_only_pr_auc": 0.2145,
+        "stage1_ocean_only_roc_auc": 0.766,
+        "spatio_ocean_pr_auc": 0.6143,
+        "spatio_ocean_roc_auc": 0.9159
+      },
+      {
+        "held_out_block": "Raigad_17.5_18.5",
+        "n_cells": 20,
+        "prevalence": 0.0657,
+        "stage1_ocean_only_pr_auc": 0.159,
+        "stage1_ocean_only_roc_auc": 0.7731,
+        "spatio_ocean_pr_auc": 0.5897,
+        "spatio_ocean_roc_auc": 0.9236
+      },
+      {
+        "held_out_block": "Mumbai_Palghar_18.5_20.5",
+        "n_cells": 27,
+        "prevalence": 0.0392,
+        "stage1_ocean_only_pr_auc": 0.1027,
+        "stage1_ocean_only_roc_auc": 0.6867,
+        "spatio_ocean_pr_auc": 0.4575,
+        "spatio_ocean_roc_auc": 0.9146
+      }
+    ]
+  },
+  "experiment_e_incois_pfz_comparison": {
+    "pfz_count": 120,
+    "pfz_nearest_cell_median_depth_m": 34.4,
+    "gfw_high_cells_median_depth_m": 74.3,
+    "pfz_mean_stage1_habitat_score": 0.6413,
+    "all_cells_mean_stage1_habitat_score": 0.5404,
+    "pfz_mean_stage2_seasonal_p": 0.1099,
+    "median_distance_pfz_to_nearest_gfw_high_km": 28.6,
+    "pfz_within_35km_of_gfw_high_pct": 0.5833
+  }
+}

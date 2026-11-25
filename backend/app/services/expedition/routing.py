@@ -125,5 +125,10 @@ def build_route(start: Dict, destination: Dict) -> Dict:
         "land_crossings": crossings[:20],
         "warnings": warnings,
         "is_navigable_direct": not warnings,
-        "disclaimer": "Direct line only. Not a navigational chart; verify passage against local knowledge.",
+        "is_direct_reference_only": True,
+        "coverage_disclosures": [
+            "Great-circle path is a direct-distance reference only, NOT a safe navigable route.",
+            "Land check uses ~1 km global_land_mask with a 3 km harbour exclusion; narrow reefs, shoals, wrecks, and shallow water are not checked.",
+        ],
+        "disclaimer": "Direct great-circle reference only. NOT a safe navigable route or nautical chart; verify passage against official charts and local knowledge.",
     }

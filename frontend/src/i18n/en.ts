@@ -97,6 +97,9 @@ const en = {
   exp_no_package: 'No expedition package on this device. Plan one while you have signal.',
   exp_waypoint: 'Waypoint',
   exp_track_points: 'Track points',
+  exp_night_mode: 'Night mode',
+  exp_emergency: 'Emergency / MOB',
+  exp_black_box: 'Voyage Black Box',
 } as const;
 
 export type TranslationKey = keyof typeof en;

@@ -5,19 +5,32 @@
  */
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { fetchHealth, fetchMapSummary, fetchMarineForecast, fetchMarineWarnings } from '../services/api';
+import {
+  fetchDistrictWarnings,
+  fetchHealth,
+  fetchMapSummary,
+  fetchMarineForecast,
+  fetchMarineWarnings,
+  fetchOceanLayers,
+} from '../services/api';
 import type { HealthResponse } from '../types/health';
-import type { MapSummaryResponse, MarineForecast, MarineWarnings } from '../types/map';
+import type {
+  DistrictWarningsResponse,
+  MapSummaryResponse,
+  MarineForecast,
+  MarineWarnings,
+  OceanLayersManifest,
+} from '../types/map';
 
 interface DataValue {
   summary: MapSummaryResponse | null;
   health: HealthResponse | null;
   warnings: MarineWarnings | null;
   forecast: MarineForecast | null;
+  oceanLayers: OceanLayersManifest | null;
+  districtWarnings: DistrictWarningsResponse | null;
   loading: boolean;
   error: string | null;
-  demo: boolean;
-  setDemo: (d: boolean) => void;
   refresh: () => void;
   lastUpdated: string | null;
 }
@@ -30,9 +43,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [warnings, setWarnings] = useState<MarineWarnings | null>(null);
   const [forecast, setForecast] = useState<MarineForecast | null>(null);
+  const [oceanLayers, setOceanLayers] = useState<OceanLayersManifest | null>(null);
+  const [districtWarnings, setDistrictWarnings] = useState<DistrictWarningsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [demo, setDemo] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
 
@@ -42,8 +56,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     setLoading(true);
     (async () => {
-      const [s, h, w, f] = await Promise.allSettled([
-        fetchMapSummary(demo), fetchHealth(), fetchMarineWarnings(), fetchMarineForecast(),
+      const [s, h, w, f, ol, dw] = await Promise.allSettled([
+        fetchMapSummary(),
+        fetchHealth(),
+        fetchMarineWarnings(),
+        fetchMarineForecast(),
+        fetchOceanLayers(),
+        fetchDistrictWarnings(),
       ]);
       if (cancelled) return;
       if (s.status === 'fulfilled') { setSummary(s.value); setError(null); }
@@ -51,11 +70,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
       if (h.status === 'fulfilled') setHealth(h.value);
       if (w.status === 'fulfilled') setWarnings(w.value);
       if (f.status === 'fulfilled') setForecast(f.value);
+      if (ol.status === 'fulfilled') setOceanLayers(ol.value);
+      if (dw.status === 'fulfilled') setDistrictWarnings(dw.value);
       setLastUpdated(new Date().toISOString());
       setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [demo, tick]);
+  }, [tick]);
 
   useEffect(() => {
     const id = setInterval(refresh, REFRESH_MS);
@@ -63,8 +84,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, [refresh]);
 
   const value = useMemo<DataValue>(() => ({
-    summary, health, warnings, forecast, loading, error, demo, setDemo, refresh, lastUpdated,
-  }), [summary, health, warnings, forecast, loading, error, demo, refresh, lastUpdated]);
+    summary, health, warnings, forecast, oceanLayers, districtWarnings, loading, error, refresh, lastUpdated,
+  }), [summary, health, warnings, forecast, oceanLayers, districtWarnings, loading, error, refresh, lastUpdated]);
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
 }
@@ -89,6 +110,12 @@ export interface Conditions {
   wave: number | null;
   period: number | null;
   swell: number | null;
+  swellPeriod: number | null;
+  sst: number | null;
+  currentSpeed: number | null;
+  currentDir: number | null;
+  currentU: number | null;
+  currentV: number | null;
   wind: number | null;
   gust: number | null;
   windDir: number | null;
@@ -104,6 +131,12 @@ export function conditionsAt(f: MarineForecast | null, district: string, now: nu
     wave: d.hourly.wave_height_m[i] ?? null,
     period: d.hourly.wave_period_s[i] ?? null,
     swell: d.hourly.swell_wave_height_m[i] ?? null,
+    swellPeriod: d.hourly.swell_wave_period_s?.[i] ?? null,
+    sst: d.hourly.sea_surface_temperature_c?.[i] ?? null,
+    currentSpeed: d.hourly.ocean_current_velocity_mps?.[i] ?? null,
+    currentDir: d.hourly.ocean_current_direction_deg?.[i] ?? null,
+    currentU: d.hourly.ocean_current_u_mps?.[i] ?? null,
+    currentV: d.hourly.ocean_current_v_mps?.[i] ?? null,
     wind: d.hourly.wind_speed_kmh[i] ?? null,
     gust: d.hourly.wind_gusts_kmh[i] ?? null,
     windDir: d.hourly.wind_direction_deg[i] ?? null,
