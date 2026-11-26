@@ -55,7 +55,6 @@ ml/models/*.h5
 
 # Offline expedition assets (large, regenerable — see backend/static/offline/README.md)
 backend/static/offline/*.pmtiles
-backend/static/offline/*.geojson
 
 # Logs
 *.log
